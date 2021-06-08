@@ -1,8 +1,8 @@
 import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
-import { FormBuilder, FormControl, FormControlDirective, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { dealTexasHoldEm, handDisplay, rankHand } from './utils';
+import { dealTexasHoldEm, handDisplay } from './utils';
 
 const values = {
   2: 0,
@@ -151,7 +151,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     );
     if (currentFocusIndex !== -1 && currentFocusIndex < inputArray.length - 1) {
-      inputArray[currentFocusIndex + 1].nativeElement.focus();
+      inputArray[currentFocusIndex + 1].nativeElement.select();
     } else {
       this.calculate.nativeElement.click();
     }
