@@ -54,7 +54,6 @@ export class AppComponent implements OnInit, OnDestroy {
         card3: this.createCardControl()
       })
     });
-    this.cardForm.get('player1');
   }
 
   createCardControl(): FormControl {
@@ -83,6 +82,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (notation.length === 2) {
       cardValue = values[notation[0] as keyof typeof values] + 13 * suits[notation[1] as keyof typeof suits];
+    } else if (notation.length === 1) {
+      cardValue = values[notation[0] as keyof typeof values];
     }
     return cardValue;
   }

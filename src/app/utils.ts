@@ -144,7 +144,14 @@ export const dealCards = (
   const board = [];
   if (holeCards) {
     Object.keys(holeCards).map(Number)
-      .forEach(playerNumber => table[playerNumber] = holeCards[playerNumber]);
+      .forEach(playerNumber => {
+        const playerHoleCards = holeCards[playerNumber].slice();
+        const numCardsToGivePlayer = numCardsPerPlayer - playerHoleCards.length;
+        Array.from({ length: numCardsToGivePlayer }).forEach(() => {
+          playerHoleCards.push(deck.pop() as number);
+        });
+        table[playerNumber] = playerHoleCards;
+      });
   } else {
     for (let card = 0; card < numCardsPerPlayer; card += 1) {
       for (let player = 0; player < numPlayers; player += 1) {
