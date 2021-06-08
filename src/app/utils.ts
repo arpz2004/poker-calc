@@ -10,10 +10,11 @@ const TEN_CARD_POSITION = 8;
 const RANK_BASE_VALUE = Math.pow(10, 9);
 const suitsLengthArray = new Array(NUM_SUITS_IN_DECK).fill(0);
 const deckLengthArray = new Array(NUM_VALUES_IN_DECK).fill(0);
-let filteredDeck: number[];
+let filteredDeck: number[] | undefined;
 
 export const buildDeck = (deadCards?: number[]): number[] => {
   if (!filteredDeck) {
+    console.log('setting new filteredDeck');
     filteredDeck = Array.from(new Array(NUM_CARDS_IN_DECK), (_, index) => index)
       .filter(card => !deadCards?.includes(card));
   }
@@ -240,9 +241,13 @@ export const dealRound = ({ numPlayers, numCardsPerPlayer, holeCards, currentBoa
 
 export const dealTexasHoldEm = (
   numPlayers: number,
+  resetFilteredDeck: boolean,
   holeCards?: { [key: number]: number[] },
   currentBoard?: number[]
 ) => {
+  if (resetFilteredDeck) {
+    filteredDeck = undefined;
+  }
   const round = dealRound({
     numPlayers,
     numCardsPerPlayer: 2,

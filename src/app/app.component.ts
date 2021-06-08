@@ -83,7 +83,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (notation.length === 2) {
       cardValue = values[notation[0] as keyof typeof values] + 13 * suits[notation[1] as keyof typeof suits];
     } else if (notation.length === 1) {
-      cardValue = values[notation[0] as keyof typeof values];
+      cardValue = values[notation[0] as keyof typeof values] + 13 * Math.floor(Math.random() * 4);
     }
     return cardValue;
   }
@@ -110,8 +110,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.player1Hand = handDisplay(player1Hand);
     this.player2Hand = handDisplay(player2Hand);
     this.flop = handDisplay(board);
-    Array.from({ length }).forEach(() => {
-      results.push(dealTexasHoldEm(2, { 0: player1Hand, 1: player2Hand }, board));
+    Array.from({ length }).forEach((n, i) => {
+      results.push(dealTexasHoldEm(2, !i, { 0: player1Hand, 1: player2Hand }, board));
     });
     const player1WinTimes = results.reduce((acc, val) => {
       const player1 = val.find(result => result.name === 'Player 1');
