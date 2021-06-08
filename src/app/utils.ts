@@ -14,7 +14,6 @@ let filteredDeck: number[] | undefined;
 
 export const buildDeck = (deadCards?: number[]): number[] => {
   if (!filteredDeck) {
-    console.log('setting new filteredDeck');
     filteredDeck = Array.from(new Array(NUM_CARDS_IN_DECK), (_, index) => index)
       .filter(card => !deadCards?.includes(card));
   }
