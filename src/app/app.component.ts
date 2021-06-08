@@ -31,6 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
     equity: string
   }[] = [];
   handsAboveThirdEquity = '';
+  averageEquityAboveThirdEquity = '';
 
   @ViewChildren('input') inputs!: QueryList<ElementRef<HTMLInputElement>>;
   @ViewChild('calculate') calculate!: ElementRef<HTMLElement>;
@@ -152,9 +153,30 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.handsAboveThirdEquity = (simulations.filter(sim => +sim.equity > 33.33).length / simulations.length).toFixed(2);
+    const equityThreshold = 33.33;
+    const handsAboveEquityThreshold: (typeof simulations) = [];
+    const handsBelowEquityThreshold: (typeof simulations) = [];
+    simulations.forEach(sim => {
+      if (+sim.equity > equityThreshold) {
+        handsAboveEquityThreshold.push(sim);
+      } else {
+        handsBelowEquityThreshold.push(sim);
+      }
+    });
+    this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length).toFixed(2);
+
+    this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
+      / handsAboveEquityThreshold.length).toFixed(2);
 
     this.simulations = simulations;
+    console.log({
+      equityThreshold,
+      handsAboveEquityThreshold,
+      handsBelowEquityThreshold,
+      handsAboveThirdEquity: this.handsAboveThirdEquity,
+      averageEquityAboveThirdEquity: this.averageEquityAboveThirdEquity,
+      simulations
+    });
     const end = window.performance.now();
     this.executionTime = (end - start).toFixed(0);
   }

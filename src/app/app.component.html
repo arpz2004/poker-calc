@@ -114,7 +114,11 @@
   <div *ngIf="submitted" class="my-2">
     <div>Calculated in {{ executionTime }}ms.</div>
     <div *ngIf="beatTheDealerMode && handsAboveThirdEquity">
-      {{ handsAboveThirdEquity }}% of hands above 33.33% equity
+      <div>{{ handsAboveThirdEquity }}% of hands above 33.33% equity</div>
+      <div>
+        {{ averageEquityAboveThirdEquity }}% equity for hands above 33.33%
+        equity
+      </div>
     </div>
     <div class="row">
       <div class="mb-2 col" *ngFor="let simulation of simulations">
