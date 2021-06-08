@@ -1,7 +1,7 @@
 <div class="container">
   <form class="form" [formGroup]="cardForm" (ngSubmit)="calculateEquity()">
     <div class="d-flex">
-      <div class="me-3" formGroupName="player1">
+      <div class="me-3" *ngIf="!runAllHands" formGroupName="player1">
         <label class="form-label">Player1</label>
         <div class="d-flex">
           <div>
@@ -39,7 +39,7 @@
           />
         </div>
       </div>
-      <div formGroupName="flop">
+      <div *ngIf="displayFlop" formGroupName="flop">
         <label class="form-label">Flop</label>
         <div class="d-flex">
           <div>
@@ -69,14 +69,65 @@
         </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary mt-3" #calculate>Calculate</button>
+    <div class="form-check mt-2">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="runAllFlops"
+        formControlName="runAllFlops"
+      />
+      <label class="form-check-label" for="runAllFlops"> Run All Flops </label>
+    </div>
+    <div class="form-check mt-2">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="runAllHands"
+        formControlName="runAllHands"
+      />
+      <label class="form-check-label" for="runAllHands"> Run All Hands </label>
+    </div>
+    <div class="form-check mt-2">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="beatTheDealer"
+        formControlName="beatTheDealer"
+      />
+      <label class="form-check-label" for="beatTheDealer">
+        Beat The Dealer Mode
+      </label>
+    </div>
+    <label for="numberOfSimulations" class="form-label"
+      >Number of Simulations</label
+    >
+    <input
+      id="numberOfSimulations"
+      class="form-control simulations"
+      type="text"
+      formControlName="numberOfSimulations"
+    />
+    <button type="submit" class="btn btn-primary mt-3" #calculate>
+      Calculate
+    </button>
   </form>
-  <div *ngIf="submitted">
-    <h3>Equity:</h3>
-    <div>{{ equity }}%</div>
-    <div>Player 1 Hand: {{ player1Hand }}</div>
-    <div>Player 2 Hand: {{ player2Hand }}</div>
-    <div>Flop: {{ flop }}</div>
+  <div *ngIf="submitted" class="my-2">
     <div>Calculated in {{ executionTime }}ms.</div>
+    <div *ngIf="beatTheDealerMode && handsAboveThirdEquity">
+      {{ handsAboveThirdEquity }}% of hands above 33.33% equity
+    </div>
+    <div class="row">
+      <div class="mb-2 col" *ngFor="let simulation of simulations">
+        <h3>Equity:</h3>
+        <div>{{ simulation.equity }}%</div>
+        <div *ngIf="simulation.player1Hand">
+          Player 1 Hand: {{ simulation.player1Hand }}
+        </div>
+        <div *ngIf="simulation.player2Hand">
+          Player 2 Hand: {{ simulation.player2Hand }}
+        </div>
+        <div *ngIf="flop">Flop: {{ flop }}</div>
+      </div>
+    </div>
   </div>
 </div>

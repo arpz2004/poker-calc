@@ -2,24 +2,11 @@ import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChi
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { cardNotationToInt, cardSuits, cardValues } from './cardConversion';
+import { getAllFlops } from './flops';
+import { getAllHands } from './hands';
 import { dealTexasHoldEm, handDisplay } from './utils';
 
-const values = {
-  2: 0,
-  3: 1,
-  4: 2,
-  5: 3,
-  6: 4,
-  7: 5,
-  8: 6,
-  9: 7,
-  T: 8,
-  J: 9,
-  Q: 10,
-  K: 11,
-  A: 12
-};
-const suits = { c: 0, d: 1, h: 2, s: 3 };
 const WORST_HAND_4S_OR_BETTER = 2000131280;
 
 @Component({
@@ -30,15 +17,20 @@ const WORST_HAND_4S_OR_BETTER = 2000131280;
 export class AppComponent implements OnInit, OnDestroy {
   title = 'poker-calc';
   cardForm!: FormGroup;
-  equity = '';
-  player1Hand = '';
-  player2Hand = '';
   flop = '';
   executionTime = '';
   submitted = false;
   complete: Subject<void> = new Subject();
   beatTheDealerMode = true;
-  quickMode = true;
+  quickMode = false;
+  displayFlop = false;
+  runAllHands = true;
+  simulations: {
+    player1Hand: string,
+    player2Hand: string,
+    equity: string
+  }[] = [];
+  handsAboveThirdEquity = '';
 
   @ViewChildren('input') inputs!: QueryList<ElementRef<HTMLInputElement>>;
   @ViewChild('calculate') calculate!: ElementRef<HTMLElement>;
@@ -58,7 +50,20 @@ export class AppComponent implements OnInit, OnDestroy {
         card1: this.createCardControl(),
         card2: this.createCardControl(),
         card3: this.createCardControl()
-      })
+      }),
+      runAllFlops: [true],
+      runAllHands: [true],
+      beatTheDealer: [true],
+      numberOfSimulations: [1000]
+    });
+    this.cardForm.get('runAllFlops')?.valueChanges.pipe(takeUntil(this.complete)).subscribe((value: boolean) => {
+      this.displayFlop = !value;
+    });
+    this.cardForm.get('runAllHands')?.valueChanges.pipe(takeUntil(this.complete)).subscribe((value: boolean) => {
+      this.runAllHands = value;
+    });
+    this.cardForm.get('beatTheDealer')?.valueChanges.pipe(takeUntil(this.complete)).subscribe((value: boolean) => {
+      this.beatTheDealerMode = value;
     });
   }
 
@@ -71,10 +76,10 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       let cardValue = newValue.charAt(0).toUpperCase();
       let suit = newValue.charAt(1).toLowerCase();
-      if (!Object.keys(values).includes(cardValue)) {
+      if (!Object.keys(cardValues).includes(cardValue)) {
         cardValue = '';
       }
-      if (!Object.keys(suits).includes(suit)) {
+      if (!Object.keys(cardSuits).includes(suit)) {
         suit = '';
       }
       newValue = cardValue + suit;
@@ -87,42 +92,74 @@ export class AppComponent implements OnInit, OnDestroy {
     return control;
   }
 
-  cardNotationToInt(notation: string): number {
-    let cardValue = 0;
-
-    if (notation.length === 2) {
-      cardValue = values[notation[0] as keyof typeof values] + 13 * suits[notation[1] as keyof typeof suits];
-    } else if (notation.length === 1) {
-      cardValue = values[notation[0] as keyof typeof values] + 13 * Math.floor(Math.random() * 4);
-    }
-    return cardValue;
-  }
-
 
   calculateEquity(): void {
     this.submitted = true;
     const start = window.performance.now();
-    const length = 10000;
-    const results: ReturnType<typeof dealTexasHoldEm>[] = [];
-    const player1Hand = [
+    const length = this.cardForm.get('numberOfSimulations')?.value || 0;
+    const player1HandString = [
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
-    ].filter(x => x).map(card => this.cardNotationToInt(card));
-    const player2Hand = [
+    ].filter(x => x);
+    const player1Hand = player1HandString.map(card => cardNotationToInt(card));
+    const player2HandString = [
       this.cardForm.get('player2')?.get('card1')?.value,
       this.cardForm.get('player2')?.get('card2')?.value
-    ].filter(x => x).map(card => this.cardNotationToInt(card));
+    ].filter(x => x);
+    const player2Hand = player2HandString.map(card => cardNotationToInt(card));
     const board = [
       this.cardForm.get('flop')?.get('card1')?.value,
       this.cardForm.get('flop')?.get('card2')?.value,
       this.cardForm.get('flop')?.get('card3')?.value
-    ].filter(x => x).map(card => this.cardNotationToInt(card));
-    this.player1Hand = handDisplay(player1Hand);
-    this.player2Hand = handDisplay(player2Hand);
+    ].filter(x => x).map(card => cardNotationToInt(card));
     this.flop = handDisplay(board);
-    Array.from({ length }).forEach((n, i) => {
-      results.push(dealTexasHoldEm(2, !i, { 0: player1Hand, 1: player2Hand }, board));
-    });
+    let flops = [];
+    const simulations: {
+      player1Hand: string,
+      player2Hand: string,
+      equity: string
+    }[] = [];
+    if (this.cardForm.get('runAllHands')?.value) {
+      getAllHands().forEach((handString, handIndex) => {
+        const handResults: ReturnType<typeof dealTexasHoldEm>[] = [];
+        console.log(`Hand ${handIndex + 1} of 1326`);
+        const hand = handString.map(card => cardNotationToInt(card));
+        flops = this.cardForm.get('runAllFlops')?.value ? getAllFlops(handString.concat(player2HandString)) : [board];
+        flops.forEach(flop => {
+          Array.from({ length }).forEach((n, i) => {
+            handResults.push(dealTexasHoldEm(2, !i, { 0: hand, 1: player2Hand }, flop));
+          });
+        });
+        simulations.push({
+          player1Hand: handDisplay(hand),
+          player2Hand: handDisplay(player2Hand),
+          equity: this.getEquityFromSimulations(handResults)
+        });
+      });
+    } else {
+      const handResults: ReturnType<typeof dealTexasHoldEm>[] = [];
+      flops = this.cardForm.get('runAllFlops')?.value ? getAllFlops(player1HandString.concat(player2HandString)) : [board];
+      flops.forEach((flop, flopIndex) => {
+        console.log(`Flop ${flopIndex + 1} of ${flops.length}`);
+        Array.from({ length }).forEach((n, i) => {
+          handResults.push(dealTexasHoldEm(2, !i, { 0: player1Hand, 1: player2Hand }, flop));
+        });
+      });
+      simulations.push({
+        player1Hand: handDisplay(player1Hand),
+        player2Hand: handDisplay(player2Hand),
+        equity: this.getEquityFromSimulations(handResults)
+      });
+    }
+
+    this.handsAboveThirdEquity = (simulations.filter(sim => +sim.equity > 33.33).length / simulations.length).toFixed(2);
+
+    this.simulations = simulations;
+    const end = window.performance.now();
+    this.executionTime = (end - start).toFixed(0);
+  }
+
+  getEquityFromSimulations(results: ReturnType<typeof dealTexasHoldEm>[]): string {
     const player1WinTimes = results.reduce((acc, val) => {
       const player1 = val.find(result => result.name === 'Player 1');
       const player2 = val.find(result => result.name === 'Player 2');
@@ -138,10 +175,7 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
     }, 0);
-    this.equity = (player1WinTimes / length * 100).toFixed(2);
-
-    const end = window.performance.now();
-    this.executionTime = (end - start).toFixed(0);
+    return (player1WinTimes * 100 / results.length).toFixed(2);
   }
 
   focusNext(): void {
