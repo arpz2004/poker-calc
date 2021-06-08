@@ -1,8 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { FormBuilder, FormControl, FormControlDirective, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { dealTexasHoldEm, handDisplay } from './utils';
+import { dealTexasHoldEm, handDisplay, rankHand } from './utils';
 
 const values = {
   2: 0,
@@ -20,6 +20,7 @@ const values = {
   A: 12
 };
 const suits = { c: 0, d: 1, h: 2, s: 3 };
+const WORST_HAND_4S_OR_BETTER = 2000131280;
 
 @Component({
   selector: 'app-root',
@@ -36,6 +37,11 @@ export class AppComponent implements OnInit, OnDestroy {
   executionTime = '';
   submitted = false;
   complete: Subject<void> = new Subject();
+  beatTheDealerMode = true;
+  quickMode = true;
+
+  @ViewChildren('input') inputs!: QueryList<ElementRef<HTMLInputElement>>;
+  @ViewChild('calculate') calculate!: ElementRef<HTMLElement>;
 
   constructor(private fb: FormBuilder) { }
 
@@ -71,8 +77,12 @@ export class AppComponent implements OnInit, OnDestroy {
       if (!Object.keys(suits).includes(suit)) {
         suit = '';
       }
-      control.setValue(cardValue + suit, { emitEvent: false });
+      newValue = cardValue + suit;
+      control.setValue(newValue, { emitEvent: false });
       control.updateValueAndValidity({ emitEvent: false });
+      if (this.quickMode && newValue) {
+        this.focusNext();
+      }
     });
     return control;
   }
@@ -118,14 +128,33 @@ export class AppComponent implements OnInit, OnDestroy {
       const player2 = val.find(result => result.name === 'Player 2');
       const player1RankValue = player1?.bestHand as number;
       const player2RankValue = player2?.bestHand as number;
-      const player1Wins = player1RankValue > player2RankValue;
-      const tie = player1RankValue === player2RankValue;
+      let player1Wins;
+      let tie;
+      player1Wins = player1RankValue > player2RankValue;
+      tie = player1RankValue === player2RankValue;
+      if (this.beatTheDealerMode) {
+        player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
+        tie = tie || player2RankValue < WORST_HAND_4S_OR_BETTER;
+      }
       return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
     }, 0);
     this.equity = (player1WinTimes / length * 100).toFixed(2);
 
     const end = window.performance.now();
     this.executionTime = (end - start).toFixed(0);
+  }
+
+  focusNext(): void {
+    const inputArray = this.inputs.toArray();
+    const currentFocusIndex = inputArray.findIndex(input => {
+      return input.nativeElement === document.activeElement;
+    }
+    );
+    if (currentFocusIndex !== -1 && currentFocusIndex < inputArray.length - 1) {
+      inputArray[currentFocusIndex + 1].nativeElement.focus();
+    } else {
+      this.calculate.nativeElement.click();
+    }
   }
 
   ngOnDestroy(): void {

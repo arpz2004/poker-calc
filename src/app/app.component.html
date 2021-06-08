@@ -5,40 +5,71 @@
         <label class="form-label">Player1</label>
         <div class="d-flex">
           <div>
-            <input class="form-control" type="text" formControlName="card1" />
+            <input
+              class="form-control"
+              type="text"
+              formControlName="card1"
+              #input
+            />
           </div>
           <div>
-            <input class="form-control" type="text" formControlName="card2" />
+            <input
+              class="form-control"
+              type="text"
+              formControlName="card2"
+              #input
+            />
           </div>
         </div>
       </div>
-      <div class="me-3" formGroupName="player2">
+      <div *ngIf="!beatTheDealerMode" class="me-3" formGroupName="player2">
         <label class="form-label">Player2</label>
         <div class="d-flex">
-          <div>
-            <input class="form-control" type="text" formControlName="card1" />
-          </div>
-          <div>
-            <input class="form-control" type="text" formControlName="card2" />
-          </div>
+          <input
+            class="form-control"
+            type="text"
+            formControlName="card1"
+            #input
+          />
+          <input
+            class="form-control"
+            type="text"
+            formControlName="card2"
+            #input
+          />
         </div>
       </div>
       <div formGroupName="flop">
         <label class="form-label">Flop</label>
         <div class="d-flex">
           <div>
-            <input class="form-control" type="text" formControlName="card1" />
+            <input
+              class="form-control"
+              type="text"
+              formControlName="card1"
+              #input
+            />
           </div>
           <div>
-            <input class="form-control" type="text" formControlName="card2" />
+            <input
+              class="form-control"
+              type="text"
+              formControlName="card2"
+              #input
+            />
           </div>
           <div>
-            <input class="form-control" type="text" formControlName="card3" />
+            <input
+              class="form-control"
+              type="text"
+              formControlName="card3"
+              #input
+            />
           </div>
         </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary mt-3">Calculate</button>
+    <button type="submit" class="btn btn-primary mt-3" #calculate>Calculate</button>
   </form>
   <div *ngIf="submitted">
     <h3>Equity:</h3>
