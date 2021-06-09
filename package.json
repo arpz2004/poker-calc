@@ -20,10 +20,12 @@
     "@angular/platform-browser-dynamic": "~11.0.3",
     "@angular/router": "~11.0.3",
     "bootstrap": "^5.0.1",
+    "node-addon-api": "^3.2.1",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
   },
+  "gypfile": true,
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.1100.3",
     "@angular/cli": "~11.0.3",

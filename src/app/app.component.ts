@@ -6,6 +6,7 @@ import { cardNotationToInt, cardSuits, cardValues } from './cardConversion';
 import { getAllFlops } from './flops';
 import { getAllHands } from './hands';
 import { dealTexasHoldEm, handDisplay } from './utils';
+import { PokerEvalService } from './pokerEval.service';
 
 const WORST_HAND_4S_OR_BETTER = 2000131280;
 
@@ -36,9 +37,10 @@ export class AppComponent implements OnInit, OnDestroy {
   @ViewChildren('input') inputs!: QueryList<ElementRef<HTMLInputElement>>;
   @ViewChild('calculate') calculate!: ElementRef<HTMLElement>;
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
   ngOnInit(): void {
+    this.pokerEvalService.getPokerEval().subscribe(resp => console.log('pokerEvalResponse is: ', resp));
     this.cardForm = this.fb.group({
       player1: this.fb.group({
         card1: this.createCardControl(),
