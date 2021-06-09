@@ -110,7 +110,7 @@ void EnumerateAll7CardHands()
   printf("\nEnumerated %d hands.\n", count);
 }
 
-String Hello(const CallbackInfo &info)
+String PokerEval(const CallbackInfo &info)
 {
 
   // Load the HandRanks.DAT file and map it into the HR array
@@ -130,7 +130,7 @@ String Hello(const CallbackInfo &info)
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
-  exports.Set("hello", Function::New(env, Hello));
+  exports.Set("pokerEval", Function::New(env, PokerEval));
   return exports;
 }
 

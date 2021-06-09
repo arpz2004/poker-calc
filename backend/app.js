@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 async function getPokerEval() {
   console.log("called PokerEval");
   const data = await exec(
-    `node -e "require('./build/Release/native.node').hello()`
+    `node -e "require('./build/Release/native.node').pokerEval()`
   );
   console.log("Poker eval returned data: ", data);
   return data;
