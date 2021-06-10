@@ -94,32 +94,16 @@ export const rankHand = (hand: number[]) => {
     highCard: true,
   };
   let rankIndex = 0;
-  // let rankDescription = '';
   const handRankIndex = Object.keys(ranks).findIndex(key => ranks[key as keyof typeof ranks]);
   rankIndex = 10 - handRankIndex;
   rankValue +=
     rankIndex * RANK_BASE_VALUE -
     ((rankValue === STRAIGHT_LOW_ACE_INDICATOR && ACE_VALUE - 1) || 0);
-  // rankDescription = rankDescription
-  //   .split('_')
-  //   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-  //   .join(' ');
-  // rankHandPerformance += (window.performance.now() - start);
   return rankValue;
-  // return {
-  //   hand,
-  //   suits,
-  //   values,
-  //   rankValue,
-  //   ranks,
-  //   rankDescription,
-  //   display: handDisplay(hand),
-  // };
 };
 
 export const compareHands = (hands: number[][]) => {
   const comparedHands = Math.max(...hands.map((hand) => rankHand(hand)));
-  // .sort((handA, handB) => handB.rankValue - handA.rankValue);
   return comparedHands;
 };
 
@@ -129,7 +113,6 @@ export const dealCards = (
   holeCards?: { [key: number]: number[] },
   currentBoard?: number[]
 ) => {
-  let start = window.performance.now();
   let deadCards: number[] = [];
   if (holeCards) {
     Object.keys(holeCards).map(Number)
@@ -139,7 +122,6 @@ export const dealCards = (
     deadCards = deadCards.concat(currentBoard);
   }
   const deck = buildDeck(deadCards);
-  start = window.performance.now();
   const table: number[][] = Array.from(new Array(numPlayers), () => []);
   const board = [];
   if (holeCards) {
@@ -216,7 +198,6 @@ export const dealRound = ({ numPlayers, numCardsPerPlayer, holeCards, currentBoa
     numPlayers: number, numCardsPerPlayer: number, holeCards?: { [key: number]: number[] },
     currentBoard?: number[]
   }) => {
-  let start = window.performance.now();
   const game = dealCards(numPlayers, numCardsPerPlayer, holeCards, currentBoard);
   const players = game.table.map((hole, index) => {
     return {
@@ -228,10 +209,7 @@ export const dealRound = ({ numPlayers, numCardsPerPlayer, holeCards, currentBoa
   });
   players.forEach((player) => {
     player.bestHand = findBestHandTexasHoldEm(player.hole, game.board);
-    // player.board = handDisplay(player.board) as any;
-    // player.hole = handDisplay(player.hole) as any;
   });
-  start = window.performance.now();
   const rankPlayers = players.sort(
     (a, b) => b.bestHand - a.bestHand
   );
