@@ -126,7 +126,7 @@ void EnumerateAll7CardHands()
   printf("\nEnumerated %d hands.\n", count);
 }
 
-vector<int> getHandRanks(vector<int> playerHand, vector<int> flop)
+vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> deadCards)
 {
   vector<int> baseHand;
   baseHand.insert(baseHand.end(), playerHand.begin(), playerHand.end());
@@ -134,13 +134,19 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop)
   vector<int> handRanks;
   for (int i = 1; i < 53; i++)
   {
-    if (playerHand[0] == i || playerHand[1] == i || flop[0] == i || flop[1] == i || flop[2] == i)
+    if (
+        find(playerHand.begin(), playerHand.end(), i) != playerHand.end() ||
+        find(flop.begin(), flop.end(), i) != flop.end() ||
+        find(deadCards.begin(), deadCards.end(), i) != deadCards.end())
     {
       continue;
     }
     for (int j = i + 1; j < 53; j++)
     {
-      if (playerHand[0] == j || playerHand[1] == j || flop[0] == j || flop[1] == j || flop[2] == j)
+      if (
+          find(playerHand.begin(), playerHand.end(), j) != playerHand.end() ||
+          find(flop.begin(), flop.end(), j) != flop.end() ||
+          find(deadCards.begin(), deadCards.end(), j) != deadCards.end())
       {
         continue;
       }
@@ -179,9 +185,9 @@ String PokerEval(const CallbackInfo &info)
   // int handRank = LookupHand(cards);
   // printf("Testing v2 %d", handRank);
   cerr << "start player 1";
-  print(getHandRanks(player1Hand, flop));
+  print(getHandRanks(player1Hand, flop, player2Hand));
   cerr << "start player 2";
-  print(getHandRanks(player2Hand, flop));
+  print(getHandRanks(player2Hand, flop, player1Hand));
 
   return String::New(info.Env(), "0");
 }
