@@ -30,6 +30,7 @@ app.get("/api/pokerEval", (req, res, next) => {
   getPokerEval().then((data) =>
     res.status(200).json({
       eval: data.stdout,
+      errors: data.stderr,
     })
   );
 });

@@ -1,6 +1,7 @@
 #include <napi.h>
 #include <iostream>
 #include <cstring>
+#include <iterator>
 
 #define DWORD int32_t
 
@@ -10,29 +11,44 @@ using namespace std;
 // The handranks lookup table- loaded from HANDRANKS.DAT.
 int HR[32487834];
 
+void print(std::vector<int> const &input)
+{
+  std::copy(input.begin(),
+            input.end(),
+            std::ostream_iterator<int>(std::cout, " "));
+}
+
+void printError(std::vector<int> const &input)
+{
+  std::copy(input.begin(),
+            input.end(),
+            std::ostream_iterator<int>(std::cerr, " "));
+}
+
 // This function isn't currently used, but shows how you lookup
 // a 7-card poker hand. pCards should be a pointer to an array
 // of 7 integers each with value between 1 and 52 inclusive.
-int LookupHand(int *pCards)
+int LookupHand(vector<int> cards)
 {
-  int p = HR[53 + *pCards++];
-  p = HR[p + *pCards++];
-  p = HR[p + *pCards++];
-  p = HR[p + *pCards++];
-  p = HR[p + *pCards++];
-  p = HR[p + *pCards++];
-  return HR[p + *pCards++];
+  int p = HR[53 + cards[0]];
+  p = HR[p + cards[1]];
+  p = HR[p + cards[2]];
+  p = HR[p + cards[3]];
+  p = HR[p + cards[4]];
+  p = HR[p + cards[5]];
+  return HR[p + cards[6]];
 }
 
 void LookupSingleHands()
 {
+  printf("Looking up individual hands...\n\n");
 
   // Create a 7-card poker hand (each card gets a value between 1 and 52)
-  int cards[] = {2, 6, 12, 14, 23, 26, 29};
+  // int cards[] = { 2, 6, 12, 14, 23, 26, 29 };
+  vector<int> cards({2, 3, 4, 5, 6, 7, 8});
   int retVal = LookupHand(cards);
-  // printf("Category: %d\n", retVal >> 12);
-  // printf("Salt: %d\n", retVal & 0x00000FFF);
-  printf("%d %d", retVal >> 12, retVal & 0x00000FFF);
+  printf("Category: %d\n", retVal >> 12);
+  printf("Salt: %d\n", retVal & 0x00000FFF);
 }
 
 void EnumerateAll7CardHands()
@@ -110,6 +126,38 @@ void EnumerateAll7CardHands()
   printf("\nEnumerated %d hands.\n", count);
 }
 
+vector<int> getHandRanks(vector<int> playerHand, vector<int> flop)
+{
+  vector<int> baseHand;
+  baseHand.insert(baseHand.end(), playerHand.begin(), playerHand.end());
+  baseHand.insert(baseHand.end(), flop.begin(), flop.end());
+  vector<int> handRanks;
+  for (int i = 1; i < 53; i++)
+  {
+    if (playerHand[0] == i || playerHand[1] == i || flop[0] == i || flop[1] == i || flop[2] == i)
+    {
+      continue;
+    }
+    for (int j = i + 1; j < 53; j++)
+    {
+      if (playerHand[0] == j || playerHand[1] == j || flop[0] == j || flop[1] == j || flop[2] == j)
+      {
+        continue;
+      }
+      vector<int> hand = baseHand;
+      hand.insert(hand.end(), {i, j});
+      int handScore = LookupHand(hand);
+      if (handScore == 4880)
+      {
+        cerr << "hand break";
+        printError(hand);
+      }
+      handRanks.push_back(handScore);
+    }
+  }
+  return handRanks;
+}
+
 String PokerEval(const CallbackInfo &info)
 {
 
@@ -123,7 +171,17 @@ String PokerEval(const CallbackInfo &info)
 
   // Enumerate all 133,784,560 possible 7-card poker hands...
   // EnumerateAll7CardHands();
-  LookupSingleHands();
+
+  vector<int> player1Hand({39, 23});
+  vector<int> player2Hand({46, 7});
+  vector<int> flop({26, 33, 9});
+  vector<int> cards({2, 3, 4, 5, 6, 26, 29});
+  // int handRank = LookupHand(cards);
+  // printf("Testing v2 %d", handRank);
+  cerr << "start player 1";
+  print(getHandRanks(player1Hand, flop));
+  cerr << "start player 2";
+  print(getHandRanks(player2Hand, flop));
 
   return String::New(info.Env(), "0");
 }

@@ -22,10 +22,10 @@ export class AppComponent implements OnInit, OnDestroy {
   executionTime = '';
   submitted = false;
   complete: Subject<void> = new Subject();
-  beatTheDealerMode = true;
+  beatTheDealerMode = false;
   quickMode = false;
-  displayFlop = false;
-  runAllHands = true;
+  displayFlop = true;
+  runAllHands = false;
   simulations: {
     player1Hand: string,
     player2Hand: string,
@@ -40,7 +40,29 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
   ngOnInit(): void {
-    this.pokerEvalService.getPokerEval().subscribe(resp => console.log('pokerEvalResponse is: ', resp));
+    this.pokerEvalService.getPokerEval().subscribe(resp => {
+      const handEvals = resp.eval.trim().split(' ');
+      const half = Math.ceil(handEvals.length / 2);
+      const player1HandEvals = handEvals.slice(0, half);
+      const player2HandEvals = handEvals.slice(-half);
+      const groupedHandEvals = player1HandEvals.map((score, i) => {
+        return [
+          {
+            name: 'Player 1',
+            hole: [] as number[],
+            board: [] as number[],
+            bestHand: +score,
+          },
+          {
+            name: 'Player 2',
+            hole: [] as number[],
+            board: [] as number[],
+            bestHand: +player2HandEvals[i]
+          }
+        ];
+      });
+      console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
+    });
     this.cardForm = this.fb.group({
       player1: this.fb.group({
         card1: this.createCardControl(),
@@ -54,9 +76,9 @@ export class AppComponent implements OnInit, OnDestroy {
         card2: this.createCardControl(),
         card3: this.createCardControl()
       }),
-      runAllFlops: [true],
-      runAllHands: [true],
-      beatTheDealer: [true],
+      runAllFlops: [false],
+      runAllHands: [false],
+      beatTheDealer: [false],
       numberOfSimulations: [1000]
     });
     this.cardForm.get('runAllFlops')?.valueChanges.pipe(takeUntil(this.complete)).subscribe((value: boolean) => {
@@ -193,12 +215,16 @@ export class AppComponent implements OnInit, OnDestroy {
       let tie;
       player1Wins = player1RankValue > player2RankValue;
       tie = player1RankValue === player2RankValue;
+      if (tie) {
+        console.log('tie values are: ', player1RankValue, player2RankValue);
+      }
       if (this.beatTheDealerMode) {
         player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
         tie = tie || player2RankValue < WORST_HAND_4S_OR_BETTER;
       }
       return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
     }, 0);
+    console.log('player1WinTimes: ', player1WinTimes, results.length);
     return (player1WinTimes * 100 / results.length).toFixed(2);
   }
 
