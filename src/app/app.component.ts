@@ -40,6 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
   ngOnInit(): void {
+    const start = window.performance.now();
     this.pokerEvalService.getPokerEval().subscribe(resp => {
       const handEvals = resp.eval.trim().split(' ');
       const half = Math.ceil(handEvals.length / 2);
@@ -62,6 +63,8 @@ export class AppComponent implements OnInit, OnDestroy {
         ];
       });
       console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
+      const end = window.performance.now();
+      this.executionTime = (end - start).toFixed(0);
     });
     this.cardForm = this.fb.group({
       player1: this.fb.group({
@@ -216,7 +219,6 @@ export class AppComponent implements OnInit, OnDestroy {
       player1Wins = player1RankValue > player2RankValue;
       tie = player1RankValue === player2RankValue;
       if (tie) {
-        console.log('tie values are: ', player1RankValue, player2RankValue);
       }
       if (this.beatTheDealerMode) {
         player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
@@ -224,7 +226,6 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
     }, 0);
-    console.log('player1WinTimes: ', player1WinTimes, results.length);
     return (player1WinTimes * 100 / results.length).toFixed(2);
   }
 

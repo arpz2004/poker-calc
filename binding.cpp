@@ -153,11 +153,6 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
       vector<int> hand = baseHand;
       hand.insert(hand.end(), {i, j});
       int handScore = LookupHand(hand);
-      if (handScore == 4880)
-      {
-        cerr << "hand break";
-        printError(hand);
-      }
       handRanks.push_back(handScore);
     }
   }
@@ -184,9 +179,7 @@ String PokerEval(const CallbackInfo &info)
   vector<int> cards({2, 3, 4, 5, 6, 26, 29});
   // int handRank = LookupHand(cards);
   // printf("Testing v2 %d", handRank);
-  cerr << "start player 1";
   print(getHandRanks(player1Hand, flop, player2Hand));
-  cerr << "start player 2";
   print(getHandRanks(player2Hand, flop, player1Hand));
 
   return String::New(info.Env(), "0");
