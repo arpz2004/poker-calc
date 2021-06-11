@@ -75,18 +75,26 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
 Value PokerEval(const CallbackInfo &info)
 {
 
-  ArrayBuffer buf = info[0].As<ArrayBuffer>();
-  const int32_t *array = reinterpret_cast<int32_t *>(buf.Data());
+  Array array = info[0].As<Array>();
   vector<int> player1Hand;
-  player1Hand.push_back(array[0]);
-  player1Hand.push_back(array[1]);
   vector<int> player2Hand;
-  player2Hand.push_back(array[2]);
-  player2Hand.push_back(array[3]);
   vector<int> flop;
-  flop.push_back(array[4]);
-  flop.push_back(array[5]);
-  flop.push_back(array[6]);
+  for (int i = 0; i < array.Length(); i++)
+  {
+    int value = (int)array.Get(i).As<Number>();
+    if (i < 2)
+    {
+      player1Hand.push_back(value);
+    }
+    else if (i < 4)
+    {
+      player2Hand.push_back(value);
+    }
+    else if (i < 7)
+    {
+      flop.push_back(value);
+    }
+  }
 
   // Load the HandRanks.DAT file and map it into the HR array
   memset(HR, 0, sizeof(HR));

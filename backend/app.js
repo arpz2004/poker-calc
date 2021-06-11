@@ -20,8 +20,8 @@ app.use((req, res, next) => {
 });
 
 async function getPokerEval(player1Hand, player2Hand, flop) {
-  const array = new Int32Array(player1Hand.concat(player2Hand).concat(flop));
-  const data = await binding.pokerEval(array.buffer);
+  const array = player1Hand.concat(player2Hand).concat(flop);
+  const data = await binding.pokerEval(array);
   return data;
 }
 
