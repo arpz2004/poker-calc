@@ -44,37 +44,39 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   vector<int> baseHand;
   baseHand.insert(baseHand.end(), playerHand.begin(), playerHand.end());
   baseHand.insert(baseHand.end(), flop.begin(), flop.end());
+
+  vector<int> cardsInPlay = deadCards;
+  cardsInPlay.insert(cardsInPlay.end(), playerHand.begin(), playerHand.end());
+  cardsInPlay.insert(cardsInPlay.end(), flop.begin(), flop.end());
+
   vector<int> handRanks;
-  for (int i = 1; i < 53; i++)
+  vector<bool> v(52);
+  fill(v.begin(), v.begin() + 2, true);
+  do
   {
-    if (
-        find(playerHand.begin(), playerHand.end(), i) != playerHand.end() ||
-        find(flop.begin(), flop.end(), i) != flop.end() ||
-        find(deadCards.begin(), deadCards.end(), i) != deadCards.end())
+    vector<int> hand = baseHand;
+    for (int i = 0; i < 52; ++i)
     {
-      continue;
-    }
-    for (int j = i + 1; j < 53; j++)
-    {
-      if (
-          find(playerHand.begin(), playerHand.end(), j) != playerHand.end() ||
-          find(flop.begin(), flop.end(), j) != flop.end() ||
-          find(deadCards.begin(), deadCards.end(), j) != deadCards.end())
+      if (v[i])
       {
-        continue;
+        if (find(cardsInPlay.begin(), cardsInPlay.end(), i + 1) != cardsInPlay.end())
+        {
+          break;
+        }
+        hand.push_back(i + 1);
       }
-      vector<int> hand = baseHand;
-      hand.insert(hand.end(), {i, j});
+    }
+    if (hand.size() == 7)
+    {
       int handScore = LookupHand(hand);
       handRanks.push_back(handScore);
     }
-  }
+  } while (std::prev_permutation(v.begin(), v.end()));
   return handRanks;
 }
 
 Value PokerEval(const CallbackInfo &info)
 {
-
   Array array = info[0].As<Array>();
   vector<int> player1Hand;
   vector<int> player2Hand;
