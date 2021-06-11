@@ -2,14 +2,13 @@ import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChi
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
-import { getAllFlops } from './utils/flops';
 import { HandResult, PlayerName } from './models/handResult';
-import { getAllHands } from './utils/hands';
 import { PokerEvalService } from './services/pokerEval.service';
+import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
 import { handDisplay } from './utils/displayHand';
+import { getAllHands } from './utils/hands';
 
-const WORST_HAND_4S_OR_BETTER = 2000131280;
+const WORST_HAND_4S_OR_BETTER = 8651;
 
 @Component({
   selector: 'app-root',
@@ -195,16 +194,12 @@ export class AppComponent implements OnInit, OnDestroy {
       let tie;
       player1Wins = player1RankValue > player2RankValue;
       tie = player1RankValue === player2RankValue;
-      if (tie) {
-        console.log('tie values are: ', player1RankValue, player2RankValue);
-      }
       if (this.beatTheDealerMode) {
         player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
         tie = tie || player2RankValue < WORST_HAND_4S_OR_BETTER;
       }
       return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
     }, 0);
-    console.log('@@@@', player1WinTimes, results.length);
     return (player1WinTimes * 100 / results.length).toFixed(2);
   }
 
