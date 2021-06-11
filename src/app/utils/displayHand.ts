@@ -8,7 +8,7 @@ export const handDisplay = (hand: number[]) => {
   const handString = hand
     .reduce((obj: string[], item) => {
       obj.push(
-        `${values[Math.floor(item / NUM_SUITS_IN_DECK)]}${suits[item % NUM_SUITS_IN_DECK - 1]
+        `${values[Math.floor((item - 1) / NUM_SUITS_IN_DECK)]}${suits[((item - 1) % NUM_SUITS_IN_DECK)]
         }`
       );
       return obj;
