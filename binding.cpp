@@ -51,7 +51,7 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
 
   vector<int> handRanks;
   vector<bool> v(52);
-  fill(v.begin(), v.begin() + 2, true);
+  fill(v.begin(), v.begin() + 7 - baseHand.size(), true);
   do
   {
     vector<int> hand = baseHand;
@@ -84,15 +84,15 @@ Value PokerEval(const CallbackInfo &info)
   for (int i = 0; i < array.Length(); i++)
   {
     int value = (int)array.Get(i).As<Number>();
-    if (i < 2)
+    if (i < 2 && array.Length() >= 2)
     {
       player1Hand.push_back(value);
     }
-    else if (i < 4)
+    else if (i < 4 && array.Length() >= 4)
     {
       player2Hand.push_back(value);
     }
-    else if (i < 7)
+    else if (i < 7 && array.Length() == 7)
     {
       flop.push_back(value);
     }

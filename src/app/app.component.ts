@@ -97,7 +97,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   calculateEquity(): void {
     this.submitted = true;
-    const start = window.performance.now();
     const player1HandString = [
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
@@ -108,13 +107,12 @@ export class AppComponent implements OnInit, OnDestroy {
       this.cardForm.get('player2')?.get('card2')?.value
     ].filter(x => x);
     const player2Hand = player2HandString.map(card => cardNotationToInt(card));
-    const board = [
+    const board = this.cardForm.get('runAllFlops')?.value ? [] : [
       this.cardForm.get('flop')?.get('card1')?.value,
       this.cardForm.get('flop')?.get('card2')?.value,
       this.cardForm.get('flop')?.get('card3')?.value
     ].filter(x => x).map(card => cardNotationToInt(card));
     this.flop = handDisplay(board);
-    let flops = [];
     const simulations: {
       player1Hand: string,
       player2Hand: string,
@@ -125,11 +123,8 @@ export class AppComponent implements OnInit, OnDestroy {
         const handResults: HandResult[][] = [];
         console.log(`Hand ${handIndex + 1} of 1326`);
         const hand = handString.map(card => cardNotationToInt(card));
-        flops = this.cardForm.get('runAllFlops')?.value ? getAllFlops(handString.concat(player2HandString)) : [board];
-        flops.forEach(flop => {
-          Array.from({ length }).forEach((n, i) => {
-            // handResults.push(dealTexasHoldEm(2, !i, { 0: hand, 1: player2Hand }, flop));
-          });
+        Array.from({ length }).forEach((n, i) => {
+          // handResults.push(dealTexasHoldEm(2, !i, { 0: hand, 1: player2Hand }, flop));
         });
         simulations.push({
           player1Hand: handDisplay(hand),
@@ -139,58 +134,55 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     } else {
       let handResults: HandResult[][] = [];
-      flops = this.cardForm.get('runAllFlops')?.value ? getAllFlops(player1HandString.concat(player2HandString)) : [board];
-      flops.forEach((flop, flopIndex) => {
-        this.pokerEvalService.getPokerEval(player1Hand, player2Hand, flop).subscribe(resp => {
-          const groupedHandEvals = resp.player1Results.map((score, i) => {
-            return [
-              {
-                name: 'Player 1' as PlayerName,
-                score,
-              },
-              {
-                name: 'Player 2' as PlayerName,
-                score: +resp.player2Results[i]
-              }
-            ];
-          });
-          handResults = handResults.concat(groupedHandEvals);
-          console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
-          simulations.push({
-            player1Hand: handDisplay(player1Hand),
-            player2Hand: handDisplay(player2Hand),
-            equity: this.getEquityFromSimulations(handResults)
-          });
-          const equityThreshold = 33.33;
-          const handsAboveEquityThreshold: (typeof simulations) = [];
-          const handsBelowEquityThreshold: (typeof simulations) = [];
-          simulations.forEach(sim => {
-            if (+sim.equity > equityThreshold) {
-              handsAboveEquityThreshold.push(sim);
-            } else {
-              handsBelowEquityThreshold.push(sim);
+      const start = window.performance.now();
+      this.pokerEvalService.getPokerEval(player1Hand, player2Hand, board).subscribe(resp => {
+        const groupedHandEvals = resp.player1Results.map((score, i) => {
+          return [
+            {
+              name: 'Player 1' as PlayerName,
+              score,
+            },
+            {
+              name: 'Player 2' as PlayerName,
+              score: +resp.player2Results[i]
             }
-          });
-          this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length).toFixed(2);
-
-          this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
-            / handsAboveEquityThreshold.length).toFixed(2);
-
-          this.simulations = simulations;
-          console.log({
-            equityThreshold,
-            handsAboveEquityThreshold,
-            handsBelowEquityThreshold,
-            handsAboveThirdEquity: this.handsAboveThirdEquity,
-            averageEquityAboveThirdEquity: this.averageEquityAboveThirdEquity,
-            simulations
-          });
+          ];
         });
-        console.log(`Flop ${flopIndex + 1} of ${flops.length}`);
+        handResults = handResults.concat(groupedHandEvals);
+        console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
+        simulations.push({
+          player1Hand: handDisplay(player1Hand),
+          player2Hand: handDisplay(player2Hand),
+          equity: this.getEquityFromSimulations(handResults)
+        });
+        const equityThreshold = 33.33;
+        const handsAboveEquityThreshold: (typeof simulations) = [];
+        const handsBelowEquityThreshold: (typeof simulations) = [];
+        simulations.forEach(sim => {
+          if (+sim.equity > equityThreshold) {
+            handsAboveEquityThreshold.push(sim);
+          } else {
+            handsBelowEquityThreshold.push(sim);
+          }
+        });
+        this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length).toFixed(2);
+
+        this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
+          / handsAboveEquityThreshold.length).toFixed(2);
+
+        this.simulations = simulations;
+        const end = window.performance.now();
+        this.executionTime = (end - start).toFixed(0);
+        console.log({
+          equityThreshold,
+          handsAboveEquityThreshold,
+          handsBelowEquityThreshold,
+          handsAboveThirdEquity: this.handsAboveThirdEquity,
+          averageEquityAboveThirdEquity: this.averageEquityAboveThirdEquity,
+          simulations
+        });
       });
     }
-    const end = window.performance.now();
-    this.executionTime = (end - start).toFixed(0);
   }
 
   getEquityFromSimulations(results: HandResult[][]): string {
