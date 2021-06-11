@@ -104,7 +104,13 @@
   </form>
   <div *ngIf="submitted" class="my-2">
     <div *ngIf="executionTime">Calculated in {{ executionTime }}ms.</div>
-    <div *ngIf="beatTheDealerMode && handsAboveThirdEquity">
+    <div
+      *ngIf="
+        beatTheDealerMode &&
+        handsAboveThirdEquity &&
+        cardForm.get('runAllHands')?.value
+      "
+    >
       <div>{{ handsAboveThirdEquity }}% of hands above 33.33% equity</div>
       <div>
         {{ averageEquityAboveThirdEquity }}% equity for hands above 33.33%

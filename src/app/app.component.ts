@@ -96,12 +96,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   calculateEquity(): void {
     this.submitted = true;
-    const player1HandString = [
+    const player1HandString: string[] = [
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
     ].filter(x => x);
-    const player1Hand = player1HandString.map(card => cardNotationToInt(card));
-    const player2HandString = [
+    const player2HandString: string[] = [
       this.cardForm.get('player2')?.get('card1')?.value,
       this.cardForm.get('player2')?.get('card2')?.value
     ].filter(x => x);
@@ -117,22 +116,10 @@ export class AppComponent implements OnInit, OnDestroy {
       player2Hand: string,
       equity: string
     }[] = [];
-    if (this.cardForm.get('runAllHands')?.value) {
-      getAllHands().forEach((handString, handIndex) => {
-        const handResults: HandResult[][] = [];
-        console.log(`Hand ${handIndex + 1} of 1326`);
-        const hand = handString.map(card => cardNotationToInt(card));
-        Array.from({ length }).forEach((n, i) => {
-          // handResults.push(dealTexasHoldEm(2, !i, { 0: hand, 1: player2Hand }, flop));
-        });
-        simulations.push({
-          player1Hand: handDisplay(hand),
-          player2Hand: handDisplay(player2Hand),
-          equity: this.getEquityFromSimulations(handResults)
-        });
-      });
-    } else {
+    const hands = this.cardForm.get('runAllHands')?.value ? getAllHands() : [player1HandString];
+    hands.forEach(handString => {
       let handResults: HandResult[][] = [];
+      const player1Hand = handString.map(card => cardNotationToInt(card));
       const start = window.performance.now();
       this.pokerEvalService.getPokerEval(player1Hand, player2Hand, board).subscribe(resp => {
         const groupedHandEvals = resp.player1Results.map((score, i) => {
@@ -181,7 +168,7 @@ export class AppComponent implements OnInit, OnDestroy {
           simulations
         });
       });
-    }
+    });
   }
 
   getEquityFromSimulations(results: HandResult[][]): string {
