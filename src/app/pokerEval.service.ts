@@ -9,13 +9,18 @@ export class PokerEvalService {
 
   getPokerEval(): Observable<{
     player1Results: number[],
-    player2Results: number[],
+    player2Results: number[]
   }> {
-    return this.http.get<{
+    const requestBody = {
+      player1Hand: [39, 23],
+      player2Hand: [46, 7],
+      flop: [26, 33, 9]
+    };
+    return this.http.post<{
       player1Results: number[],
-      player2Results: number[],
+      player2Results: number[]
     }
-    >('http://localhost:3000/api/pokerEval');
+    >('http://localhost:3000/api/pokerEval', requestBody);
   }
 }
 

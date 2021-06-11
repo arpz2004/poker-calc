@@ -1,9 +1,10 @@
 const express = require("express");
-const { promisify } = require("util");
-const exec = promisify(require("child_process").exec);
+const bodyParser = require("body-parser");
 const binding = require("bindings")("native");
 
 const app = express();
+
+app.use(bodyParser.json());
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -18,19 +19,19 @@ app.use((req, res, next) => {
   next();
 });
 
-async function getPokerEval() {
-  console.log("called PokerEval");
-  const array = new Int32Array([39, 23, 46, 7, 26, 33, 9]);
+async function getPokerEval(player1Hand, player2Hand, flop) {
+  const array = new Int32Array(player1Hand.concat(player2Hand).concat(flop));
   const data = await binding.pokerEval(array.buffer);
   return data;
 }
 
-app.get("/api/pokerEval", (req, res, next) => {
-  getPokerEval().then((data) =>
-    res.status(200).json({
-      player1Results: [...data.player1Results],
-      player2Results: [...data.player2Results],
-    })
+app.post("/api/pokerEval", (req, res, next) => {
+  getPokerEval(req.body.player1Hand, req.body.player2Hand, req.body.flop).then(
+    (data) =>
+      res.status(200).json({
+        player1Results: [...data.player1Results],
+        player2Results: [...data.player2Results],
+      })
   );
 });
 
