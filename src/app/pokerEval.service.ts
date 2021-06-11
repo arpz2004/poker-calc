@@ -7,8 +7,15 @@ export class PokerEvalService {
 
   constructor(private http: HttpClient) { }
 
-  getPokerEval(): Observable<{ eval: string }> {
-    return this.http.get<{ eval: string }>('http://localhost:3000/api/pokerEval');
+  getPokerEval(): Observable<{
+    player1Results: number[],
+    player2Results: number[],
+  }> {
+    return this.http.get<{
+      player1Results: number[],
+      player2Results: number[],
+    }
+    >('http://localhost:3000/api/pokerEval');
   }
 }
 

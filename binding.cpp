@@ -39,93 +39,6 @@ int LookupHand(vector<int> cards)
   return HR[p + cards[6]];
 }
 
-void LookupSingleHands()
-{
-  printf("Looking up individual hands...\n\n");
-
-  // Create a 7-card poker hand (each card gets a value between 1 and 52)
-  // int cards[] = { 2, 6, 12, 14, 23, 26, 29 };
-  vector<int> cards({2, 3, 4, 5, 6, 7, 8});
-  int retVal = LookupHand(cards);
-  printf("Category: %d\n", retVal >> 12);
-  printf("Salt: %d\n", retVal & 0x00000FFF);
-}
-
-void EnumerateAll7CardHands()
-{
-  // Now let's enumerate every possible 7-card poker hand
-  int u0, u1, u2, u3, u4, u5;
-  int c0, c1, c2, c3, c4, c5, c6;
-  int handTypeSum[10];                         // Frequency of hand category (flush, 2 pair, etc)
-  int count = 0;                               // total number of hands enumerated
-  memset(handTypeSum, 0, sizeof(handTypeSum)); // do init..
-
-  // On your mark, get set, go...
-  //DWORD dwTime = GetTickCount();
-
-  for (c0 = 1; c0 < 47; c0++)
-  {
-    u0 = HR[53 + c0];
-    for (c1 = c0 + 1; c1 < 48; c1++)
-    {
-      u1 = HR[u0 + c1];
-      for (c2 = c1 + 1; c2 < 49; c2++)
-      {
-        u2 = HR[u1 + c2];
-        for (c3 = c2 + 1; c3 < 50; c3++)
-        {
-          u3 = HR[u2 + c3];
-          for (c4 = c3 + 1; c4 < 51; c4++)
-          {
-            u4 = HR[u3 + c4];
-            for (c5 = c4 + 1; c5 < 52; c5++)
-            {
-              u5 = HR[u4 + c5];
-              for (c6 = c5 + 1; c6 < 53; c6++)
-              {
-
-                handTypeSum[HR[u5 + c6] >> 12]++;
-
-                // JMD: The above line of code is equivalent to:
-                //int finalValue = HR[u5+c6];
-                //int handCategory = finalValue >> 12;
-                //handTypeSum[handCategory]++;
-
-                count++;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  //dwTime = GetTickCount() - dwTime;
-
-  printf("BAD:              %d\n", handTypeSum[0]);
-  printf("High Card:        %d\n", handTypeSum[1]);
-  printf("One Pair:         %d\n", handTypeSum[2]);
-  printf("Two Pair:         %d\n", handTypeSum[3]);
-  printf("Trips:            %d\n", handTypeSum[4]);
-  printf("Straight:         %d\n", handTypeSum[5]);
-  printf("Flush:            %d\n", handTypeSum[6]);
-  printf("Full House:       %d\n", handTypeSum[7]);
-  printf("Quads:            %d\n", handTypeSum[8]);
-  printf("Straight Flush:   %d\n", handTypeSum[9]);
-
-  // Perform sanity checks.. make sure numbers are where they should be
-  int testCount = 0;
-  for (int index = 0; index < 10; index++)
-    testCount += handTypeSum[index];
-  if (testCount != count || count != 133784560 || handTypeSum[0] != 0)
-  {
-    printf("\nERROR!\nERROR!\nERROR!");
-    return;
-  }
-
-  printf("\nEnumerated %d hands.\n", count);
-}
-
 vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> deadCards)
 {
   vector<int> baseHand;
@@ -159,8 +72,21 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   return handRanks;
 }
 
-String PokerEval(const CallbackInfo &info)
+Value PokerEval(const CallbackInfo &info)
 {
+
+  ArrayBuffer buf = info[0].As<ArrayBuffer>();
+  const int32_t *array = reinterpret_cast<int32_t *>(buf.Data());
+  vector<int> player1Hand;
+  player1Hand.push_back(array[0]);
+  player1Hand.push_back(array[1]);
+  vector<int> player2Hand;
+  player2Hand.push_back(array[2]);
+  player2Hand.push_back(array[3]);
+  vector<int> flop;
+  flop.push_back(array[4]);
+  flop.push_back(array[5]);
+  flop.push_back(array[6]);
 
   // Load the HandRanks.DAT file and map it into the HR array
   memset(HR, 0, sizeof(HR));
@@ -170,19 +96,30 @@ String PokerEval(const CallbackInfo &info)
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   fclose(fin);
 
-  // Enumerate all 133,784,560 possible 7-card poker hands...
-  // EnumerateAll7CardHands();
+  vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
+  vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
 
-  vector<int> player1Hand({39, 23});
-  vector<int> player2Hand({46, 7});
-  vector<int> flop({26, 33, 9});
-  vector<int> cards({2, 3, 4, 5, 6, 26, 29});
-  // int handRank = LookupHand(cards);
-  // printf("Testing v2 %d", handRank);
-  print(getHandRanks(player1Hand, flop, player2Hand));
-  print(getHandRanks(player2Hand, flop, player1Hand));
+  Napi::Array p1Results = Napi::Array::New(info.Env(), player1HandResults.size());
+  Napi::Array p2Results = Napi::Array::New(info.Env(), player2HandResults.size());
 
-  return String::New(info.Env(), "0");
+  uint32_t i = 0;
+  for (auto &&it : player1HandResults)
+  {
+    p1Results[i++] = Number::New(info.Env(), it);
+  }
+
+  i = 0;
+  for (auto &&it : player2HandResults)
+  {
+    p2Results[i++] = Number::New(info.Env(), it);
+  }
+
+  Env env = info.Env();
+  Object obj = Object::New(env);
+  obj.Set("player1Results", p1Results);
+  obj.Set("player2Results", p2Results);
+
+  return obj;
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)

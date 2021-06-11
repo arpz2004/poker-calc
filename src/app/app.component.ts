@@ -42,11 +42,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const start = window.performance.now();
     this.pokerEvalService.getPokerEval().subscribe(resp => {
-      const handEvals = resp.eval.trim().split(' ');
-      const half = Math.ceil(handEvals.length / 2);
-      const player1HandEvals = handEvals.slice(0, half);
-      const player2HandEvals = handEvals.slice(-half);
-      const groupedHandEvals = player1HandEvals.map((score, i) => {
+      const groupedHandEvals = resp.player1Results.map((score, i) => {
         return [
           {
             name: 'Player 1',
@@ -58,7 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
             name: 'Player 2',
             hole: [] as number[],
             board: [] as number[],
-            bestHand: +player2HandEvals[i]
+            bestHand: +resp.player2Results[i]
           }
         ];
       });
@@ -219,6 +215,7 @@ export class AppComponent implements OnInit, OnDestroy {
       player1Wins = player1RankValue > player2RankValue;
       tie = player1RankValue === player2RankValue;
       if (tie) {
+        console.log('tie values are: ', player1RankValue, player2RankValue);
       }
       if (this.beatTheDealerMode) {
         player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
@@ -226,6 +223,7 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
     }, 0);
+    console.log('@@@@', player1WinTimes, results.length);
     return (player1WinTimes * 100 / results.length).toFixed(2);
   }
 
