@@ -18,7 +18,7 @@ export class PokerEvalService {
     return this.http.post<{
       equity: number
     }
-    >('http://localhost:3000/api/pokerEval', requestBody).pipe(
+    >('http://localhost:3000/api/getEquity', requestBody).pipe(
       map(val => val.equity)
     );
   }

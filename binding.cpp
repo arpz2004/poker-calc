@@ -77,7 +77,7 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   return handRanks;
 }
 
-float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks, bool beatTheDealerMode)
+float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks, bool beatTheDealerMode)
 {
   int player1Wins = 0;
   for (int i = 0; i < player1HandRanks.size(); i++)
@@ -94,7 +94,7 @@ float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks, bool
   return (float)player1Wins / (float)(2 * player1HandRanks.size());
 }
 
-Value PokerEval(const CallbackInfo &info)
+Value GetEquity(const CallbackInfo &info)
 {
   Array player1HandArray = info[0].As<Array>();
   Array player2HandArray = info[1].As<Array>();
@@ -130,12 +130,12 @@ Value PokerEval(const CallbackInfo &info)
   vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
   vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
 
-  return Number::New(info.Env(), getEquity(player1HandResults, player2HandResults, beatTheDealerMode));
+  return Number::New(info.Env(), calculateEquity(player1HandResults, player2HandResults, beatTheDealerMode));
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
-  exports.Set("pokerEval", Function::New(env, PokerEval));
+  exports.Set("getEquity", Function::New(env, GetEquity));
   return exports;
 }
 

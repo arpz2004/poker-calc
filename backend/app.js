@@ -19,15 +19,19 @@ app.use((req, res, next) => {
   next();
 });
 
-async function getPokerEval(player1Hand, player2Hand, flop, beatTheDealerMode) {
-  const array = player1Hand.concat(player2Hand).concat(flop);
-  const data = await binding.pokerEval(player1Hand, player2Hand, flop, beatTheDealerMode);
+async function getEquity(player1Hand, player2Hand, flop, beatTheDealerMode) {
+  const data = await binding.getEquity(
+    player1Hand,
+    player2Hand,
+    flop,
+    beatTheDealerMode
+  );
   return data;
 }
 
-app.post("/api/pokerEval", (req, res, next) => {
+app.post("/api/getEquity", (req, res, next) => {
   ({ player1Hand, player2Hand, flop, beatTheDealerMode } = req.body);
-  getPokerEval(player1Hand, player2Hand, flop, beatTheDealerMode).then((data) =>
+  getEquity(player1Hand, player2Hand, flop, beatTheDealerMode).then((data) =>
     res.status(200).json({
       equity: data,
     })
