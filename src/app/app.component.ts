@@ -7,8 +7,6 @@ import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion
 import { handDisplay } from './utils/displayHand';
 import { getAllHands } from './utils/hands';
 
-const WORST_HAND_4S_OR_BETTER = 8651;
-
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -119,7 +117,7 @@ export class AppComponent implements OnInit, OnDestroy {
     hands.forEach(handString => {
       const player1Hand = handString.map(card => cardNotationToInt(card));
       const start = window.performance.now();
-      this.pokerEvalService.getEquity(player1Hand, player2Hand, board).subscribe(equity => {
+      this.pokerEvalService.getEquity(player1Hand, player2Hand, board, this.beatTheDealerMode).subscribe(equity => {
         simulations.push({
           player1Hand: handDisplay(player1Hand),
           player2Hand: handDisplay(player2Hand),

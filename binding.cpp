@@ -8,6 +8,8 @@
 using namespace Napi;
 using namespace std;
 
+const int WORST_HAND_4S_OR_BETTER = 8651;
+
 // The handranks lookup table- loaded from HANDRANKS.DAT.
 int HR[32487834];
 
@@ -75,21 +77,16 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   return handRanks;
 }
 
-float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
+float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks, bool beatTheDealerMode)
 {
-  // if (this.beatTheDealerMode)
-  // {
-  //   player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
-  //   tie = tie || player2RankValue < WORST_HAND_4S_OR_BETTER;
-  // }
   int player1Wins = 0;
   for (int i = 0; i < player1HandRanks.size(); i++)
   {
-    if (player1HandRanks[i] > player2HandRanks[i])
+    if (player1HandRanks[i] > player2HandRanks[i] && (!beatTheDealerMode || player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER))
     {
       player1Wins += 2;
     }
-    else if (player1HandRanks[i] == player2HandRanks[i])
+    else if (player1HandRanks[i] == player2HandRanks[i] || (beatTheDealerMode && player2HandRanks[i] < WORST_HAND_4S_OR_BETTER))
     {
       player1Wins++;
     }
@@ -100,6 +97,7 @@ float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
 Value PokerEval(const CallbackInfo &info)
 {
   Array array = info[0].As<Array>();
+  Boolean beatTheDealerMode = info[1].As<Boolean>();
   vector<int> player1Hand;
   vector<int> player2Hand;
   vector<int> flop;
@@ -131,9 +129,7 @@ Value PokerEval(const CallbackInfo &info)
   vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
   vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
 
-  cout << getEquity(player1HandResults, player2HandResults);
-
-  return Number::New(info.Env(), getEquity(player1HandResults, player2HandResults));
+  return Number::New(info.Env(), getEquity(player1HandResults, player2HandResults, beatTheDealerMode));
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)

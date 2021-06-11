@@ -8,11 +8,12 @@ export class PokerEvalService {
 
   constructor(private http: HttpClient) { }
 
-  getEquity(player1Hand: number[], player2Hand: number[], flop: number[]): Observable<number> {
+  getEquity(player1Hand: number[], player2Hand: number[], flop: number[], beatTheDealerMode: boolean): Observable<number> {
     const requestBody = {
       player1Hand,
       player2Hand,
-      flop
+      flop,
+      beatTheDealerMode
     };
     return this.http.post<{
       equity: number
