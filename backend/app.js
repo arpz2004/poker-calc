@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 
 async function getPokerEval(player1Hand, player2Hand, flop, beatTheDealerMode) {
   const array = player1Hand.concat(player2Hand).concat(flop);
-  const data = await binding.pokerEval(array, beatTheDealerMode);
+  const data = await binding.pokerEval(player1Hand, player2Hand, flop, beatTheDealerMode);
   return data;
 }
 

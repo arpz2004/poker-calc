@@ -96,26 +96,27 @@ float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks, bool
 
 Value PokerEval(const CallbackInfo &info)
 {
-  Array array = info[0].As<Array>();
-  Boolean beatTheDealerMode = info[1].As<Boolean>();
+  Array player1HandArray = info[0].As<Array>();
+  Array player2HandArray = info[1].As<Array>();
+  Array flopArray = info[2].As<Array>();
+  Boolean beatTheDealerMode = info[3].As<Boolean>();
   vector<int> player1Hand;
   vector<int> player2Hand;
   vector<int> flop;
-  for (int i = 0; i < array.Length(); i++)
+  for (int i = 0; i < player1HandArray.Length(); i++)
   {
-    int value = (int)array.Get(i).As<Number>();
-    if (i < 2 && array.Length() >= 2)
-    {
-      player1Hand.push_back(value);
-    }
-    else if (i < 4 && array.Length() >= 4)
-    {
-      player2Hand.push_back(value);
-    }
-    else if (i < 7 && array.Length() == 7)
-    {
-      flop.push_back(value);
-    }
+    int value = (int)player1HandArray.Get(i).As<Number>();
+    player1Hand.push_back(value);
+  }
+  for (int i = 0; i < player2HandArray.Length(); i++)
+  {
+    int value = (int)player2HandArray.Get(i).As<Number>();
+    player2Hand.push_back(value);
+  }
+  for (int i = 0; i < flopArray.Length(); i++)
+  {
+    int value = (int)flopArray.Get(i).As<Number>();
+    flop.push_back(value);
   }
 
   // Load the HandRanks.DAT file and map it into the HR array
