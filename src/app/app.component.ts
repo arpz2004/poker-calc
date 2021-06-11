@@ -2,7 +2,6 @@ import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChi
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { HandResult, PlayerName } from './models/handResult';
 import { PokerEvalService } from './services/pokerEval.service';
 import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
 import { handDisplay } from './utils/displayHand';
@@ -29,10 +28,10 @@ export class AppComponent implements OnInit, OnDestroy {
   simulations: {
     player1Hand: string,
     player2Hand: string,
-    equity: string
+    equity: number
   }[] = [];
-  handsAboveThirdEquity = '';
-  averageEquityAboveThirdEquity = '';
+  handsAboveThirdEquity = -1;
+  averageEquityAboveThirdEquity = -1;
 
   @ViewChildren('input') inputs!: QueryList<ElementRef<HTMLInputElement>>;
   @ViewChild('calculate') calculate!: ElementRef<HTMLElement>;
@@ -114,34 +113,19 @@ export class AppComponent implements OnInit, OnDestroy {
     const simulations: {
       player1Hand: string,
       player2Hand: string,
-      equity: string
+      equity: number
     }[] = [];
     const hands = this.cardForm.get('runAllHands')?.value ? getAllHands() : [player1HandString];
     hands.forEach(handString => {
-      let handResults: HandResult[][] = [];
       const player1Hand = handString.map(card => cardNotationToInt(card));
       const start = window.performance.now();
-      this.pokerEvalService.getPokerEval(player1Hand, player2Hand, board).subscribe(resp => {
-        const groupedHandEvals = resp.player1Results.map((score, i) => {
-          return [
-            {
-              name: 'Player 1' as PlayerName,
-              score,
-            },
-            {
-              name: 'Player 2' as PlayerName,
-              score: +resp.player2Results[i]
-            }
-          ];
-        });
-        handResults = handResults.concat(groupedHandEvals);
-        console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
+      this.pokerEvalService.getEquity(player1Hand, player2Hand, board).subscribe(equity => {
         simulations.push({
           player1Hand: handDisplay(player1Hand),
           player2Hand: handDisplay(player2Hand),
-          equity: this.getEquityFromSimulations(handResults)
+          equity
         });
-        const equityThreshold = 33.33;
+        const equityThreshold = 0.3333;
         const handsAboveEquityThreshold: (typeof simulations) = [];
         const handsBelowEquityThreshold: (typeof simulations) = [];
         simulations.forEach(sim => {
@@ -151,43 +135,16 @@ export class AppComponent implements OnInit, OnDestroy {
             handsBelowEquityThreshold.push(sim);
           }
         });
-        this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length).toFixed(2);
+        this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length);
 
         this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
-          / handsAboveEquityThreshold.length).toFixed(2);
+          / handsAboveEquityThreshold.length);
 
         this.simulations = simulations;
         const end = window.performance.now();
         this.executionTime = (end - start).toFixed(0);
-        console.log({
-          equityThreshold,
-          handsAboveEquityThreshold,
-          handsBelowEquityThreshold,
-          handsAboveThirdEquity: this.handsAboveThirdEquity,
-          averageEquityAboveThirdEquity: this.averageEquityAboveThirdEquity,
-          simulations
-        });
       });
     });
-  }
-
-  getEquityFromSimulations(results: HandResult[][]): string {
-    const player1WinTimes = results.reduce((acc, val) => {
-      const player1 = val.find(result => result.name === 'Player 1');
-      const player2 = val.find(result => result.name === 'Player 2');
-      const player1RankValue = player1?.score as number;
-      const player2RankValue = player2?.score as number;
-      let player1Wins;
-      let tie;
-      player1Wins = player1RankValue > player2RankValue;
-      tie = player1RankValue === player2RankValue;
-      if (this.beatTheDealerMode) {
-        player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
-        tie = tie || player2RankValue < WORST_HAND_4S_OR_BETTER;
-      }
-      return acc + (player1Wins ? 1 : tie ? 0.5 : 0);
-    }, 0);
-    return (player1WinTimes * 100 / results.length).toFixed(2);
   }
 
   focusNext(): void {

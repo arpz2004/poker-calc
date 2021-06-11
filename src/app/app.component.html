@@ -111,16 +111,19 @@
         cardForm.get('runAllHands')?.value
       "
     >
-      <div>{{ handsAboveThirdEquity }}% of hands above 33.33% equity</div>
       <div>
-        {{ averageEquityAboveThirdEquity }}% equity for hands above 33.33%
+        {{ handsAboveThirdEquity | percent: "1.2-2" }} of hands above 33.33%
         equity
+      </div>
+      <div>
+        {{ averageEquityAboveThirdEquity | percent: "1.2-2" }} equity for hands
+        above 33.33% equity
       </div>
     </div>
     <div class="row">
       <div class="mb-2 col" *ngFor="let simulation of simulations">
         <h3>Equity:</h3>
-        <div>{{ simulation.equity }}%</div>
+        <div>{{ simulation.equity | percent: "1.2-2" }}</div>
         <div *ngIf="simulation.player1Hand">
           Player 1 Hand: {{ simulation.player1Hand }}
         </div>

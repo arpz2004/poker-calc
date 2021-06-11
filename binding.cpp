@@ -75,6 +75,28 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   return handRanks;
 }
 
+float getEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
+{
+  // if (this.beatTheDealerMode)
+  // {
+  //   player1Wins = player1Wins && player2RankValue >= WORST_HAND_4S_OR_BETTER;
+  //   tie = tie || player2RankValue < WORST_HAND_4S_OR_BETTER;
+  // }
+  int player1Wins = 0;
+  for (int i = 0; i < player1HandRanks.size(); i++)
+  {
+    if (player1HandRanks[i] > player2HandRanks[i])
+    {
+      player1Wins += 2;
+    }
+    else if (player1HandRanks[i] == player2HandRanks[i])
+    {
+      player1Wins++;
+    }
+  }
+  return (float)player1Wins / (float)(2 * player1HandRanks.size());
+}
+
 Value PokerEval(const CallbackInfo &info)
 {
   Array array = info[0].As<Array>();
@@ -109,27 +131,9 @@ Value PokerEval(const CallbackInfo &info)
   vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
   vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
 
-  Napi::Array p1Results = Napi::Array::New(info.Env(), player1HandResults.size());
-  Napi::Array p2Results = Napi::Array::New(info.Env(), player2HandResults.size());
+  cout << getEquity(player1HandResults, player2HandResults);
 
-  uint32_t i = 0;
-  for (auto &&it : player1HandResults)
-  {
-    p1Results[i++] = Number::New(info.Env(), it);
-  }
-
-  i = 0;
-  for (auto &&it : player2HandResults)
-  {
-    p2Results[i++] = Number::New(info.Env(), it);
-  }
-
-  Env env = info.Env();
-  Object obj = Object::New(env);
-  obj.Set("player1Results", p1Results);
-  obj.Set("player2Results", p2Results);
-
-  return obj;
+  return Number::New(info.Env(), getEquity(player1HandResults, player2HandResults));
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)

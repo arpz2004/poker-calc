@@ -29,8 +29,7 @@ app.post("/api/pokerEval", (req, res, next) => {
   getPokerEval(req.body.player1Hand, req.body.player2Hand, req.body.flop).then(
     (data) =>
       res.status(200).json({
-        player1Results: [...data.player1Results],
-        player2Results: [...data.player2Results],
+        equity: data,
       })
   );
 });
