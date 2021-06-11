@@ -2,11 +2,12 @@ import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChi
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { cardNotationToInt, cardSuits, cardValues } from './cardConversion';
-import { getAllFlops } from './flops';
-import { getAllHands } from './hands';
-import { dealTexasHoldEm, handDisplay } from './utils';
-import { PokerEvalService } from './pokerEval.service';
+import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
+import { getAllFlops } from './utils/flops';
+import { HandResult, PlayerName } from './models/handResult';
+import { getAllHands } from './utils/hands';
+import { PokerEvalService } from './services/pokerEval.service';
+import { handDisplay } from './utils/displayHand';
 
 const WORST_HAND_4S_OR_BETTER = 2000131280;
 
@@ -40,45 +41,22 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
   ngOnInit(): void {
-    const start = window.performance.now();
-    this.pokerEvalService.getPokerEval().subscribe(resp => {
-      const groupedHandEvals = resp.player1Results.map((score, i) => {
-        return [
-          {
-            name: 'Player 1',
-            hole: [] as number[],
-            board: [] as number[],
-            bestHand: +score,
-          },
-          {
-            name: 'Player 2',
-            hole: [] as number[],
-            board: [] as number[],
-            bestHand: +resp.player2Results[i]
-          }
-        ];
-      });
-      console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
-      const end = window.performance.now();
-      this.executionTime = (end - start).toFixed(0);
-    });
     this.cardForm = this.fb.group({
       player1: this.fb.group({
-        card1: this.createCardControl(),
-        card2: this.createCardControl()
+        card1: this.createCardControl('Jh'),
+        card2: this.createCardControl('7h')
       }), player2: this.fb.group({
-        card1: this.createCardControl(),
-        card2: this.createCardControl()
+        card1: this.createCardControl('Kd'),
+        card2: this.createCardControl('3h')
       }),
       flop: this.fb.group({
-        card1: this.createCardControl(),
-        card2: this.createCardControl(),
-        card3: this.createCardControl()
+        card1: this.createCardControl('8d'),
+        card2: this.createCardControl('Tc'),
+        card3: this.createCardControl('4c')
       }),
       runAllFlops: [false],
       runAllHands: [false],
-      beatTheDealer: [false],
-      numberOfSimulations: [1000]
+      beatTheDealer: [false]
     });
     this.cardForm.get('runAllFlops')?.valueChanges.pipe(takeUntil(this.complete)).subscribe((value: boolean) => {
       this.displayFlop = !value;
@@ -91,8 +69,8 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  createCardControl(): FormControl {
-    const control = this.fb.control(null);
+  createCardControl(tmpVal: string): FormControl {
+    const control = this.fb.control(tmpVal);
     control.valueChanges.pipe(takeUntil(this.complete)).subscribe((value: string) => {
       let newValue = value;
       if (value.length > 2) {
@@ -120,7 +98,6 @@ export class AppComponent implements OnInit, OnDestroy {
   calculateEquity(): void {
     this.submitted = true;
     const start = window.performance.now();
-    const length = this.cardForm.get('numberOfSimulations')?.value || 0;
     const player1HandString = [
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
@@ -145,13 +122,13 @@ export class AppComponent implements OnInit, OnDestroy {
     }[] = [];
     if (this.cardForm.get('runAllHands')?.value) {
       getAllHands().forEach((handString, handIndex) => {
-        const handResults: ReturnType<typeof dealTexasHoldEm>[] = [];
+        const handResults: HandResult[][] = [];
         console.log(`Hand ${handIndex + 1} of 1326`);
         const hand = handString.map(card => cardNotationToInt(card));
         flops = this.cardForm.get('runAllFlops')?.value ? getAllFlops(handString.concat(player2HandString)) : [board];
         flops.forEach(flop => {
           Array.from({ length }).forEach((n, i) => {
-            handResults.push(dealTexasHoldEm(2, !i, { 0: hand, 1: player2Hand }, flop));
+            // handResults.push(dealTexasHoldEm(2, !i, { 0: hand, 1: player2Hand }, flop));
           });
         });
         simulations.push({
@@ -161,55 +138,67 @@ export class AppComponent implements OnInit, OnDestroy {
         });
       });
     } else {
-      const handResults: ReturnType<typeof dealTexasHoldEm>[] = [];
+      let handResults: HandResult[][] = [];
       flops = this.cardForm.get('runAllFlops')?.value ? getAllFlops(player1HandString.concat(player2HandString)) : [board];
       flops.forEach((flop, flopIndex) => {
-        console.log(`Flop ${flopIndex + 1} of ${flops.length}`);
-        Array.from({ length }).forEach((n, i) => {
-          handResults.push(dealTexasHoldEm(2, !i, { 0: player1Hand, 1: player2Hand }, flop));
+        this.pokerEvalService.getPokerEval(player1Hand, player2Hand, flop).subscribe(resp => {
+          const groupedHandEvals = resp.player1Results.map((score, i) => {
+            return [
+              {
+                name: 'Player 1' as PlayerName,
+                score,
+              },
+              {
+                name: 'Player 2' as PlayerName,
+                score: +resp.player2Results[i]
+              }
+            ];
+          });
+          handResults = handResults.concat(groupedHandEvals);
+          console.log('equity is: ', this.getEquityFromSimulations(groupedHandEvals));
+          simulations.push({
+            player1Hand: handDisplay(player1Hand),
+            player2Hand: handDisplay(player2Hand),
+            equity: this.getEquityFromSimulations(handResults)
+          });
+          const equityThreshold = 33.33;
+          const handsAboveEquityThreshold: (typeof simulations) = [];
+          const handsBelowEquityThreshold: (typeof simulations) = [];
+          simulations.forEach(sim => {
+            if (+sim.equity > equityThreshold) {
+              handsAboveEquityThreshold.push(sim);
+            } else {
+              handsBelowEquityThreshold.push(sim);
+            }
+          });
+          this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length).toFixed(2);
+
+          this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
+            / handsAboveEquityThreshold.length).toFixed(2);
+
+          this.simulations = simulations;
+          console.log({
+            equityThreshold,
+            handsAboveEquityThreshold,
+            handsBelowEquityThreshold,
+            handsAboveThirdEquity: this.handsAboveThirdEquity,
+            averageEquityAboveThirdEquity: this.averageEquityAboveThirdEquity,
+            simulations
+          });
         });
-      });
-      simulations.push({
-        player1Hand: handDisplay(player1Hand),
-        player2Hand: handDisplay(player2Hand),
-        equity: this.getEquityFromSimulations(handResults)
+        console.log(`Flop ${flopIndex + 1} of ${flops.length}`);
       });
     }
-
-    const equityThreshold = 33.33;
-    const handsAboveEquityThreshold: (typeof simulations) = [];
-    const handsBelowEquityThreshold: (typeof simulations) = [];
-    simulations.forEach(sim => {
-      if (+sim.equity > equityThreshold) {
-        handsAboveEquityThreshold.push(sim);
-      } else {
-        handsBelowEquityThreshold.push(sim);
-      }
-    });
-    this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length).toFixed(2);
-
-    this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
-      / handsAboveEquityThreshold.length).toFixed(2);
-
-    this.simulations = simulations;
-    console.log({
-      equityThreshold,
-      handsAboveEquityThreshold,
-      handsBelowEquityThreshold,
-      handsAboveThirdEquity: this.handsAboveThirdEquity,
-      averageEquityAboveThirdEquity: this.averageEquityAboveThirdEquity,
-      simulations
-    });
     const end = window.performance.now();
     this.executionTime = (end - start).toFixed(0);
   }
 
-  getEquityFromSimulations(results: ReturnType<typeof dealTexasHoldEm>[]): string {
+  getEquityFromSimulations(results: HandResult[][]): string {
     const player1WinTimes = results.reduce((acc, val) => {
       const player1 = val.find(result => result.name === 'Player 1');
       const player2 = val.find(result => result.name === 'Player 2');
-      const player1RankValue = player1?.bestHand as number;
-      const player2RankValue = player2?.bestHand as number;
+      const player1RankValue = player1?.score as number;
+      const player2RankValue = player2?.score as number;
       let player1Wins;
       let tie;
       player1Wins = player1RankValue > player2RankValue;
