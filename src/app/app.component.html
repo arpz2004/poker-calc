@@ -1,7 +1,7 @@
 <div class="container">
   <form class="form" [formGroup]="cardForm" (ngSubmit)="calculateEquity()">
     <div class="d-flex">
-      <div class="me-3" *ngIf="!runAllHands" formGroupName="player1">
+      <div class="me-3" formGroupName="player1">
         <label class="form-label">Player1</label>
         <div class="d-flex">
           <div>
@@ -22,7 +22,7 @@
           </div>
         </div>
       </div>
-      <div *ngIf="!beatTheDealerMode" class="me-3" formGroupName="player2">
+      <div *ngIf="!runAllHands" class="me-3" formGroupName="player2">
         <label class="form-label">Player2</label>
         <div class="d-flex">
           <input

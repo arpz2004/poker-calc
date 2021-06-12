@@ -5,7 +5,6 @@ import { takeUntil } from 'rxjs/operators';
 import { PokerEvalService } from './services/pokerEval.service';
 import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
 import { handDisplay } from './utils/displayHand';
-import { getAllHands } from './utils/hands';
 
 @Component({
   selector: 'app-root',
@@ -97,11 +96,12 @@ export class AppComponent implements OnInit, OnDestroy {
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
     ].filter(x => x);
+    const player1Hand = player1HandString.map(card => cardNotationToInt(card));
     const player2HandString: string[] = [
       this.cardForm.get('player2')?.get('card1')?.value,
       this.cardForm.get('player2')?.get('card2')?.value
     ].filter(x => x);
-    const player2Hand = player2HandString.map(card => cardNotationToInt(card));
+    const player2Hand = this.cardForm.get('runAllHands')?.value ? [] : player2HandString.map(card => cardNotationToInt(card));
     const board = this.cardForm.get('runAllFlops')?.value ? [] : [
       this.cardForm.get('flop')?.get('card1')?.value,
       this.cardForm.get('flop')?.get('card2')?.value,
@@ -113,35 +113,31 @@ export class AppComponent implements OnInit, OnDestroy {
       player2Hand: string,
       equity: number
     }[] = [];
-    const hands = this.cardForm.get('runAllHands')?.value ? getAllHands() : [player1HandString];
-    hands.forEach(handString => {
-      const player1Hand = handString.map(card => cardNotationToInt(card));
-      const start = window.performance.now();
-      this.pokerEvalService.getEquity(player1Hand, player2Hand, board, this.beatTheDealerMode).subscribe(equity => {
-        simulations.push({
-          player1Hand: handDisplay(player1Hand),
-          player2Hand: handDisplay(player2Hand),
-          equity
-        });
-        const equityThreshold = 0.3333;
-        const handsAboveEquityThreshold: (typeof simulations) = [];
-        const handsBelowEquityThreshold: (typeof simulations) = [];
-        simulations.forEach(sim => {
-          if (+sim.equity > equityThreshold) {
-            handsAboveEquityThreshold.push(sim);
-          } else {
-            handsBelowEquityThreshold.push(sim);
-          }
-        });
-        this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length);
-
-        this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
-          / handsAboveEquityThreshold.length);
-
-        this.simulations = simulations;
-        const end = window.performance.now();
-        this.executionTime = (end - start).toFixed(0);
+    const start = window.performance.now();
+    this.pokerEvalService.getEquity(player1Hand, player2Hand, board, this.beatTheDealerMode).subscribe(equity => {
+      simulations.push({
+        player1Hand: handDisplay(player1Hand),
+        player2Hand: handDisplay(player2Hand),
+        equity
       });
+      const equityThreshold = 0.3333;
+      const handsAboveEquityThreshold: (typeof simulations) = [];
+      const handsBelowEquityThreshold: (typeof simulations) = [];
+      simulations.forEach(sim => {
+        if (+sim.equity > equityThreshold) {
+          handsAboveEquityThreshold.push(sim);
+        } else {
+          handsBelowEquityThreshold.push(sim);
+        }
+      });
+      this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length);
+
+      this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
+        / handsAboveEquityThreshold.length);
+
+      this.simulations = simulations;
+      const end = window.performance.now();
+      this.executionTime = (end - start).toFixed(0);
     });
   }
 
