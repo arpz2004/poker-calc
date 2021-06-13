@@ -186,7 +186,6 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
       vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
       vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
       float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
-      // Calculate based on multiplier from hand
       float equityThreshold = 0.33333333f;
       if (equity > equityThreshold)
       {
