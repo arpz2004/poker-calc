@@ -231,7 +231,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
       equitiesWhenCalling.push_back(equity);
     }
     equities.push_back(equity);
-    std::printf("\rFlop %d of %d", ++flopNo, 120);
+    std::printf("\rFlop %d of %d", ++flopNo, flops.size());
     std::fflush(stdout);
   }
 
