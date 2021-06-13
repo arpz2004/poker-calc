@@ -130,16 +130,16 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   fclose(fin);
 
-  int handNo = 0;
+  int flopNo = 0;
 
-  vector<int> flop;
+  vector<int> player2Hand;
   vector<float> equities;
   vector<float> equitiesWhenCalling;
   vector<bool> v(52);
-  fill(v.begin(), v.begin() + 2, true);
+  fill(v.begin(), v.begin() + 3, true);
   do
   {
-    vector<int> hand;
+    vector<int> flop;
     for (int i = 0; i < 52; ++i)
     {
       if (v[i])
@@ -148,23 +148,23 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
         {
           break;
         }
-        hand.push_back(i + 1);
+        flop.push_back(i + 1);
       }
     }
-    if (hand.size() == 2)
+    if (flop.size() == 3)
     {
-      vector<int> player1HandResults = getHandRanks(player1Hand, flop, hand);
-      vector<int> player2HandResults = getHandRanks(hand, flop, player1Hand);
+      vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
+      vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
       float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
       // Calculate based on multiplier from hand
-      float equityThreshold = 33.333333;
+      float equityThreshold = 0.33333333;
       if (equity > equityThreshold)
       {
         equitiesWhenCalling.push_back(equity);
       }
       equities.push_back(equity);
     }
-    printf("\rHand %d of %d", ++handNo, (52 * 51) / 2);
+    printf("\rFlop %d of %d", ++flopNo, 22100);
     fflush(stdout);
   } while (std::prev_permutation(v.begin(), v.end()));
 

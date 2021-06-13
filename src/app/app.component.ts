@@ -91,6 +91,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   calculateEquityOrEquitiesWhenCalling(): void {
+    this.submitted = true;
     if (this.runAllHands && this.beatTheDealerMode && this.cardForm.get('runAllFlops')?.value) {
       this.calculateEquitiesWhenCalling();
     } else {
@@ -107,14 +108,13 @@ export class AppComponent implements OnInit, OnDestroy {
       const equitiesWhenCalling = equities.equitiesWhenCalling;
       this.totalEquities = equities.totalEquities;
       this.handsAboveThirdEquity = equitiesWhenCalling.length;
-      this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / length;
+      this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.handsAboveThirdEquity;
       console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.handsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
     });
   }
 
 
   calculateEquity(): void {
-    this.submitted = true;
     const player1HandString: string[] = [
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
