@@ -111,19 +111,19 @@
     <div
       *ngIf="
         beatTheDealerMode &&
-        handsAboveThirdEquity &&
+        flopsAboveThirdEquity &&
         runAllHands &&
         cardForm.get('runAllFlops')?.value &&
-        handsAboveThirdEquity >= 0 &&
+        flopsAboveThirdEquity >= 0 &&
         averageEquityAboveThirdEquity >= 0
       "
     >
       <div>
-        {{ handsAboveThirdEquity }} of {{ totalEquities }} hands above 33.33%
+        {{ flopsAboveThirdEquity }} of {{ totalEquities }} flops above 33.33%
         equity
       </div>
       <div>
-        {{ averageEquityAboveThirdEquity | percent: "1.2-2" }} equity for hands
+        {{ averageEquityAboveThirdEquity | percent: "1.2-2" }} equity for flops
         above 33.33% equity
       </div>
     </div>

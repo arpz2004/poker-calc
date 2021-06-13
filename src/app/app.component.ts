@@ -27,7 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
     player2Hand: string,
     equity: number
   };
-  handsAboveThirdEquity = -1;
+  flopsAboveThirdEquity = -1;
   averageEquityAboveThirdEquity = -1;
   totalEquities = -1;
 
@@ -92,7 +92,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   calculateEquityOrEquitiesWhenCalling(): void {
     this.submitted = true;
-    this.handsAboveThirdEquity = -1;
+    this.flopsAboveThirdEquity = -1;
     this.averageEquityAboveThirdEquity = -1;
     if (this.runAllHands && this.beatTheDealerMode && this.cardForm.get('runAllFlops')?.value) {
       this.calculateEquitiesWhenCalling();
@@ -109,9 +109,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.pokerEvalService.getEquitiesWhenCalling(player1Hand).subscribe(equities => {
       const equitiesWhenCalling = equities.equitiesWhenCalling;
       this.totalEquities = equities.totalEquities;
-      this.handsAboveThirdEquity = equitiesWhenCalling.length;
-      this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.handsAboveThirdEquity;
-      console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.handsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
+      this.flopsAboveThirdEquity = equitiesWhenCalling.length;
+      this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.flopsAboveThirdEquity;
+      console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.flopsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
     });
   }
 
