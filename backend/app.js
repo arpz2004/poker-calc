@@ -30,7 +30,7 @@ async function getEquity(player1Hand, player2Hand, flop, beatTheDealerMode) {
 }
 
 async function getEquitiesWhenCalling(player1Hand) {
-  const data = await binding.getEquity(player1Hand);
+  const data = await binding.getEquitiesWhenCalling(player1Hand);
   return data;
 }
 
