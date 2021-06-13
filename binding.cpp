@@ -116,7 +116,7 @@ float calculateEquityBeatTheDealer(vector<int> player1HandRanks, vector<int> pla
   {
     if (player1HandRanks[i / sizeComparison] > player2HandRanks[i] && player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER)
     {
-      player1Wins += getBeatTheDealerMultiplier(player1HandRanks[i]);
+      player1Wins += getBeatTheDealerMultiplier(player1HandRanks[i / sizeComparison]);
     }
     else if (player1HandRanks[i / sizeComparison] == player2HandRanks[i] || player2HandRanks[i] < WORST_HAND_4S_OR_BETTER)
     {
