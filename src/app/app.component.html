@@ -1,5 +1,9 @@
 <div class="container">
-  <form class="form" [formGroup]="cardForm" (ngSubmit)="calculateEquityOrEquitiesWhenCalling()">
+  <form
+    class="form"
+    [formGroup]="cardForm"
+    (ngSubmit)="calculateEquityOrEquitiesWhenCalling()"
+  >
     <div class="d-flex">
       <div class="me-3" formGroupName="player1">
         <label class="form-label">Player1</label>
@@ -109,7 +113,9 @@
         beatTheDealerMode &&
         handsAboveThirdEquity &&
         runAllHands &&
-        cardForm.get('runAllFlops')?.value
+        cardForm.get('runAllFlops')?.value &&
+        handsAboveThirdEquity >= 0 &&
+        averageEquityAboveThirdEquity >= 0
       "
     >
       <div>
