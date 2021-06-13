@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iterator>
 #include <numeric>
+#include "omp.h"
 
 #define DWORD int32_t
 
@@ -143,6 +144,13 @@ float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks
   return (float)player1Wins / (float)(2 * player1HandRanks.size());
 }
 
+struct c_unique
+{
+  int current;
+  c_unique() { current = 0; }
+  int operator()() { return ++current; }
+} UniqueNumber;
+
 Value GetEquitiesWhenCalling(const CallbackInfo &info)
 {
   Array player1HandArray = info[0].As<Array>();
@@ -159,29 +167,50 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   if (!fin)
     return String::New(info.Env(), "fin");
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
-  fclose(fin);
+  std::fclose(fin);
 
   int flopNo = 0;
+
+  int n = 10;
+  int r = 3;
 
   vector<int> player2Hand;
   vector<float> equities;
   vector<float> equitiesWhenCalling;
-  vector<bool> v(52);
-  fill(v.begin(), v.begin() + 3, true);
-  do
+
+  std::vector<int> myints(r);
+  std::vector<int>::iterator first = myints.begin(), last = myints.end();
+
+  std::generate(first, last, UniqueNumber);
+
+  bool firstRun = true;
+
+  while ((*first) != n - r + 1)
   {
-    vector<int> flop;
-    for (int i = 0; i < 52; ++i)
+    if (firstRun)
     {
-      if (v[i])
-      {
-        if (find(player1Hand.begin(), player1Hand.end(), i + 1) != player1Hand.end())
-        {
-          break;
-        }
-        flop.push_back(i + 1);
-      }
+      firstRun = false;
     }
+    else
+    {
+      std::vector<int>::iterator mt = last;
+
+      while (*(--mt) == n - (last - mt) + 1)
+        ;
+      (*mt)++;
+      while (++mt != last)
+        *mt = *(mt - 1) + 1;
+    }
+
+    vector<int> flop;
+
+    std::for_each(first, last, [&flop, &player1Hand](int card)
+                  {
+                    if (!(find(player1Hand.begin(), player1Hand.end(), card) != player1Hand.end()))
+                    {
+                      flop.push_back(card);
+                    }
+                  });
     if (flop.size() == 3)
     {
       vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
@@ -194,9 +223,9 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
       }
       equities.push_back(equity);
     }
-    printf("\rFlop %d of %d", ++flopNo, 22100);
-    fflush(stdout);
-  } while (std::prev_permutation(v.begin(), v.end()));
+    std::printf("\rFlop %d of %d", ++flopNo, 120);
+    std::fflush(stdout);
+  }
 
   Napi::Array equitiesWhenCallingArr = Napi::Array::New(info.Env(), equitiesWhenCalling.size());
   uint32_t i = 0;
@@ -248,7 +277,7 @@ Value GetEquity(const CallbackInfo &info)
   if (!fin)
     return String::New(info.Env(), "fin");
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
-  fclose(fin);
+  std::fclose(fin);
 
   int handNo = 0;
 
@@ -281,7 +310,7 @@ Value GetEquity(const CallbackInfo &info)
         equities.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
       }
       printf("\rHand %d of %d", ++handNo, (52 * 51) / 2);
-      fflush(stdout);
+      std::fflush(stdout);
     } while (std::prev_permutation(v.begin(), v.end()));
     equity = Number::New(info.Env(), accumulate(equities.begin(), equities.end(), 0.0) / equities.size());
   }
