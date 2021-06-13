@@ -110,19 +110,20 @@ float getBeatTheDealerMultiplier(int handRank)
 
 float calculateEquityBeatTheDealer(vector<int> player1HandRanks, vector<int> player2HandRanks)
 {
+  int sizeComparison = player2HandRanks.size() / player1HandRanks.size();
   float player1Wins = 0;
-  for (int i = 0; i < player1HandRanks.size(); i++)
+  for (int i = 0; i < player2HandRanks.size(); i++)
   {
-    if (player1HandRanks[i] > player2HandRanks[i] && player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER)
+    if (player1HandRanks[i / sizeComparison] > player2HandRanks[i] && player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER)
     {
       player1Wins += getBeatTheDealerMultiplier(player1HandRanks[i]);
     }
-    else if (player1HandRanks[i] == player2HandRanks[i] || player2HandRanks[i] < WORST_HAND_4S_OR_BETTER)
+    else if (player1HandRanks[i / sizeComparison] == player2HandRanks[i] || player2HandRanks[i] < WORST_HAND_4S_OR_BETTER)
     {
       player1Wins += 0.5f;
     }
   }
-  return (float)player1Wins / (float)(player1HandRanks.size());
+  return (float)player1Wins / (float)(player2HandRanks.size());
 }
 
 float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
