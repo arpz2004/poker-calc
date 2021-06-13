@@ -106,11 +106,14 @@ export class AppComponent implements OnInit, OnDestroy {
       this.cardForm.get('player1')?.get('card1')?.value,
       this.cardForm.get('player1')?.get('card2')?.value
     ].filter(x => x).map(card => cardNotationToInt(card));
+    const start = window.performance.now();
     this.pokerEvalService.getEquitiesWhenCalling(player1Hand).subscribe(equities => {
       const equitiesWhenCalling = equities.equitiesWhenCalling;
       this.totalEquities = equities.totalEquities;
       this.flopsAboveThirdEquity = equitiesWhenCalling.length;
       this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.flopsAboveThirdEquity;
+      const end = window.performance.now();
+      this.executionTime = (end - start).toFixed(0);
       console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.flopsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
     });
   }
@@ -133,11 +136,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.cardForm.get('flop')?.get('card3')?.value
     ].filter(x => x).map(card => cardNotationToInt(card));
     this.flop = handDisplay(board);
-    const simulations: {
-      player1Hand: string,
-      player2Hand: string,
-      equity: number
-    }[] = [];
     const start = window.performance.now();
     this.pokerEvalService.getEquity(player1Hand, player2Hand, board, this.beatTheDealerMode).subscribe(equity => {
       this.simulation = {
