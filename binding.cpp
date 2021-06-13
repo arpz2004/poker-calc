@@ -10,6 +10,7 @@ using namespace Napi;
 using namespace std;
 
 const int WORST_HAND_4S_OR_BETTER = 8651;
+const int ROYAL_FLUSH = 36874;
 
 // The handranks lookup table- loaded from HANDRANKS.DAT.
 int HR[32487834];
@@ -78,21 +79,50 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   return handRanks;
 }
 
+float getBeatTheDealerMultiplier(int handRank)
+{
+  float multiplier = 1;
+  int handType = handRank >> 12;
+  switch (handType)
+  {
+  case 6:
+    multiplier = 7.0f / 6.0f;
+    break;
+  case 7:
+    multiplier = 1.5f;
+    break;
+  case 8:
+    multiplier = 25.0f / 6.0f;
+    break;
+  case 9:
+    if (handRank == ROYAL_FLUSH)
+    {
+      multiplier = 205.0f / 6.0f;
+    }
+    else
+    {
+      multiplier = 55.0f / 6.0f;
+    }
+    break;
+  }
+  return multiplier;
+}
+
 float calculateEquityBeatTheDealer(vector<int> player1HandRanks, vector<int> player2HandRanks)
 {
-  int player1Wins = 0;
+  float player1Wins = 0;
   for (int i = 0; i < player1HandRanks.size(); i++)
   {
     if (player1HandRanks[i] > player2HandRanks[i] && player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER)
     {
-      player1Wins += 2;
+      player1Wins += getBeatTheDealerMultiplier(player1HandRanks[i]);
     }
     else if (player1HandRanks[i] == player2HandRanks[i] || player2HandRanks[i] < WORST_HAND_4S_OR_BETTER)
     {
-      player1Wins++;
+      player1Wins += 0.5f;
     }
   }
-  return (float)player1Wins / (float)(2 * player1HandRanks.size());
+  return (float)player1Wins / (float)(player1HandRanks.size());
 }
 
 float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
@@ -116,7 +146,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
 {
   Array player1HandArray = info[0].As<Array>();
   vector<int> player1Hand;
-  for (int i = 0; i < player1HandArray.Length(); i++)
+  for (size_t i = 0; i < player1HandArray.Length(); i++)
   {
     int value = (int)player1HandArray.Get(i).As<Number>();
     player1Hand.push_back(value);
@@ -157,7 +187,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
       vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
       float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
       // Calculate based on multiplier from hand
-      float equityThreshold = 0.33333333;
+      float equityThreshold = 0.33333333f;
       if (equity > equityThreshold)
       {
         equitiesWhenCalling.push_back(equity);
@@ -193,20 +223,20 @@ Value GetEquity(const CallbackInfo &info)
   vector<int> flop;
   bool runAllHands = player2HandArray.Length() == 0;
 
-  for (int i = 0; i < player1HandArray.Length(); i++)
+  for (size_t i = 0; i < player1HandArray.Length(); i++)
   {
     int value = (int)player1HandArray.Get(i).As<Number>();
     player1Hand.push_back(value);
   }
   if (!runAllHands)
   {
-    for (int i = 0; i < player2HandArray.Length(); i++)
+    for (size_t i = 0; i < player2HandArray.Length(); i++)
     {
       int value = (int)player2HandArray.Get(i).As<Number>();
       player2Hand.push_back(value);
     }
   }
-  for (int i = 0; i < flopArray.Length(); i++)
+  for (size_t i = 0; i < flopArray.Length(); i++)
   {
     int value = (int)flopArray.Get(i).As<Number>();
     flop.push_back(value);
