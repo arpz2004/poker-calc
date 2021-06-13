@@ -171,7 +171,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
 
   int flopNo = 0;
 
-  int n = 10;
+  int n = 52;
   int r = 3;
 
   vector<int> player2Hand;
@@ -184,6 +184,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   std::generate(first, last, UniqueNumber);
 
   bool firstRun = true;
+  vector<vector<int>> flops;
 
   while ((*first) != n - r + 1)
   {
@@ -213,16 +214,23 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
                   });
     if (flop.size() == 3)
     {
-      vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
-      vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
-      float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
-      float equityThreshold = 0.33333333f;
-      if (equity > equityThreshold)
-      {
-        equitiesWhenCalling.push_back(equity);
-      }
-      equities.push_back(equity);
+      flops.push_back(flop);
     }
+  }
+
+#pragma omp parallel for
+  for (int i = 0; i < flops.size(); i++)
+  {
+    vector<int> flop = flops[i];
+    vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
+    vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
+    float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
+    float equityThreshold = 0.33333333f;
+    if (equity > equityThreshold)
+    {
+      equitiesWhenCalling.push_back(equity);
+    }
+    equities.push_back(equity);
     std::printf("\rFlop %d of %d", ++flopNo, 120);
     std::fflush(stdout);
   }

@@ -17,6 +17,7 @@ export class AppComponent implements OnInit, OnDestroy {
   flop = '';
   executionTime = '';
   submitted = false;
+  loading = false;
   complete: Subject<void> = new Subject();
   beatTheDealerMode = false;
   quickMode = false;
@@ -92,6 +93,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   calculateEquityOrEquitiesWhenCalling(): void {
     this.submitted = true;
+    this.loading = true;
     this.flopsAboveThirdEquity = -1;
     this.averageEquityAboveThirdEquity = -1;
     if (this.runAllHands && this.beatTheDealerMode && this.cardForm.get('runAllFlops')?.value) {
@@ -114,7 +116,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.flopsAboveThirdEquity;
       const end = window.performance.now();
       this.executionTime = (end - start).toFixed(0);
-      console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.flopsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
+      this.loading = false;
     });
   }
 
@@ -145,6 +147,7 @@ export class AppComponent implements OnInit, OnDestroy {
       };
       const end = window.performance.now();
       this.executionTime = (end - start).toFixed(0);
+      this.loading = false;
     });
   }
 

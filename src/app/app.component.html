@@ -102,7 +102,18 @@
         Beat The Dealer Mode
       </label>
     </div>
-    <button type="submit" class="btn btn-primary mt-3" #calculate>
+    <button
+      [disabled]="loading"
+      type="submit"
+      class="btn btn-primary mt-3"
+      #calculate
+    >
+      <span
+        *ngIf="loading"
+        class="spinner-border spinner-border-sm"
+        role="status"
+        aria-hidden="true"
+      ></span>
       Calculate
     </button>
   </form>
