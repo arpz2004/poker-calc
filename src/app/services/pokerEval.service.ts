@@ -22,4 +22,18 @@ export class PokerEvalService {
       map(val => val.equity)
     );
   }
+
+  getEquitiesWhenCalling(player1Hand: number[]): Observable<{
+    equitiesWhenCalling: number[],
+    totalEquities: number
+  }> {
+    const requestBody = {
+      player1Hand
+    };
+    return this.http.post<{
+      equitiesWhenCalling: number[],
+      totalEquities: number
+    }
+    >('http://localhost:3000/api/getEquitiesWhenCalling', requestBody);
+  }
 }

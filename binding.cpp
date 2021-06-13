@@ -78,21 +78,108 @@ vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> d
   return handRanks;
 }
 
-float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks, bool beatTheDealerMode)
+float calculateEquityBeatTheDealer(vector<int> player1HandRanks, vector<int> player2HandRanks)
 {
   int player1Wins = 0;
   for (int i = 0; i < player1HandRanks.size(); i++)
   {
-    if (player1HandRanks[i] > player2HandRanks[i] && (!beatTheDealerMode || player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER))
+    if (player1HandRanks[i] > player2HandRanks[i] && player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER)
     {
       player1Wins += 2;
     }
-    else if (player1HandRanks[i] == player2HandRanks[i] || (beatTheDealerMode && player2HandRanks[i] < WORST_HAND_4S_OR_BETTER))
+    else if (player1HandRanks[i] == player2HandRanks[i] || player2HandRanks[i] < WORST_HAND_4S_OR_BETTER)
     {
       player1Wins++;
     }
   }
   return (float)player1Wins / (float)(2 * player1HandRanks.size());
+}
+
+float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
+{
+  int player1Wins = 0;
+  for (int i = 0; i < player1HandRanks.size(); i++)
+  {
+    if (player1HandRanks[i] > player2HandRanks[i])
+    {
+      player1Wins += 2;
+    }
+    else if (player1HandRanks[i] == player2HandRanks[i])
+    {
+      player1Wins++;
+    }
+  }
+  return (float)player1Wins / (float)(2 * player1HandRanks.size());
+}
+
+Value GetEquitiesWhenCalling(const CallbackInfo &info)
+{
+  Array player1HandArray = info[0].As<Array>();
+  vector<int> player1Hand;
+  for (int i = 0; i < player1HandArray.Length(); i++)
+  {
+    int value = (int)player1HandArray.Get(i).As<Number>();
+    player1Hand.push_back(value);
+  }
+
+  // Load the HandRanks.DAT file and map it into the HR array
+  memset(HR, 0, sizeof(HR));
+  FILE *fin = fopen("HandRanks.dat", "rb");
+  if (!fin)
+    return String::New(info.Env(), "fin");
+  size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
+  fclose(fin);
+
+  int handNo = 0;
+
+  vector<int> flop;
+  vector<float> equities;
+  vector<float> equitiesWhenCalling;
+  vector<bool> v(52);
+  fill(v.begin(), v.begin() + 2, true);
+  do
+  {
+    vector<int> hand;
+    for (int i = 0; i < 52; ++i)
+    {
+      if (v[i])
+      {
+        if (find(player1Hand.begin(), player1Hand.end(), i + 1) != player1Hand.end())
+        {
+          break;
+        }
+        hand.push_back(i + 1);
+      }
+    }
+    if (hand.size() == 2)
+    {
+      vector<int> player1HandResults = getHandRanks(player1Hand, flop, hand);
+      vector<int> player2HandResults = getHandRanks(hand, flop, player1Hand);
+      float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
+      // Calculate based on multiplier from hand
+      float equityThreshold = 33.333333;
+      if (equity > equityThreshold)
+      {
+        equitiesWhenCalling.push_back(equity);
+      }
+      equities.push_back(equity);
+    }
+    printf("\rHand %d of %d", ++handNo, (52 * 51) / 2);
+    fflush(stdout);
+  } while (std::prev_permutation(v.begin(), v.end()));
+
+  Napi::Array equitiesWhenCallingArr = Napi::Array::New(info.Env(), equitiesWhenCalling.size());
+  uint32_t i = 0;
+  for (auto &&it : equitiesWhenCalling)
+  {
+    equitiesWhenCallingArr[i++] = Number::New(info.Env(), it);
+  }
+
+  Env env = info.Env();
+  Object obj = Object::New(env);
+  obj.Set("equitiesWhenCalling", equitiesWhenCallingArr);
+  obj.Set("totalEquities", equities.size());
+  return obj;
 }
 
 Value GetEquity(const CallbackInfo &info)
@@ -161,7 +248,7 @@ Value GetEquity(const CallbackInfo &info)
       {
         vector<int> player1HandResults = getHandRanks(player1Hand, flop, hand);
         vector<int> player2HandResults = getHandRanks(hand, flop, player1Hand);
-        equities.push_back(calculateEquity(player1HandResults, player2HandResults, beatTheDealerMode));
+        equities.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
       }
       printf("\rHand %d of %d", ++handNo, (52 * 51) / 2);
       fflush(stdout);
@@ -172,7 +259,7 @@ Value GetEquity(const CallbackInfo &info)
   {
     vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
     vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
-    equity = Number::New(info.Env(), calculateEquity(player1HandResults, player2HandResults, beatTheDealerMode));
+    equity = Number::New(info.Env(), beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
   }
   return equity;
 }
@@ -180,6 +267,7 @@ Value GetEquity(const CallbackInfo &info)
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
   exports.Set("getEquity", Function::New(env, GetEquity));
+  exports.Set("getEquitiesWhenCalling", Function::New(env, GetEquitiesWhenCalling));
   return exports;
 }
 

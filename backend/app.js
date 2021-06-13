@@ -29,11 +29,26 @@ async function getEquity(player1Hand, player2Hand, flop, beatTheDealerMode) {
   return data;
 }
 
+async function getEquitiesWhenCalling(player1Hand) {
+  const data = await binding.getEquity(player1Hand);
+  return data;
+}
+
 app.post("/api/getEquity", (req, res, next) => {
   ({ player1Hand, player2Hand, flop, beatTheDealerMode } = req.body);
   getEquity(player1Hand, player2Hand, flop, beatTheDealerMode).then((data) =>
     res.status(200).json({
       equity: data,
+    })
+  );
+});
+
+app.post("/api/getEquitiesWhenCalling", (req, res, next) => {
+  ({ player1Hand } = req.body);
+  getEquitiesWhenCalling(player1Hand).then((data) =>
+    res.status(200).json({
+      equitiesWhenCalling: data.equitiesWhenCalling,
+      totalEquities: data.totalEquities
     })
   );
 });

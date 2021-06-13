@@ -22,13 +22,14 @@ export class AppComponent implements OnInit, OnDestroy {
   quickMode = false;
   displayFlop = true;
   runAllHands = false;
-  simulations: {
+  simulation?: {
     player1Hand: string,
     player2Hand: string,
     equity: number
-  }[] = [];
+  };
   handsAboveThirdEquity = -1;
   averageEquityAboveThirdEquity = -1;
+  totalEquities = -1;
 
   @ViewChildren('input') inputs!: QueryList<ElementRef<HTMLInputElement>>;
   @ViewChild('calculate') calculate!: ElementRef<HTMLElement>;
@@ -89,6 +90,28 @@ export class AppComponent implements OnInit, OnDestroy {
     return control;
   }
 
+  calculateEquityOrEquitiesWhenCalling(): void {
+    if (this.runAllHands && this.beatTheDealerMode && this.cardForm.get('runAllFlops')?.value) {
+      this.calculateEquitiesWhenCalling();
+    } else {
+      this.calculateEquity();
+    }
+  }
+
+  calculateEquitiesWhenCalling(): void {
+    const player1Hand: number[] = [
+      this.cardForm.get('player1')?.get('card1')?.value,
+      this.cardForm.get('player1')?.get('card2')?.value
+    ].filter(x => x).map(card => cardNotationToInt(card));
+    this.pokerEvalService.getEquitiesWhenCalling(player1Hand).subscribe(equities => {
+      const equitiesWhenCalling = equities.equitiesWhenCalling;
+      this.totalEquities = equities.totalEquities;
+      this.handsAboveThirdEquity = equitiesWhenCalling.length;
+      this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / length;
+      console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.handsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
+    });
+  }
+
 
   calculateEquity(): void {
     this.submitted = true;
@@ -115,27 +138,11 @@ export class AppComponent implements OnInit, OnDestroy {
     }[] = [];
     const start = window.performance.now();
     this.pokerEvalService.getEquity(player1Hand, player2Hand, board, this.beatTheDealerMode).subscribe(equity => {
-      simulations.push({
+      this.simulation = {
         player1Hand: handDisplay(player1Hand),
         player2Hand: handDisplay(player2Hand),
         equity
-      });
-      const equityThreshold = 0.3333;
-      const handsAboveEquityThreshold: (typeof simulations) = [];
-      const handsBelowEquityThreshold: (typeof simulations) = [];
-      simulations.forEach(sim => {
-        if (+sim.equity > equityThreshold) {
-          handsAboveEquityThreshold.push(sim);
-        } else {
-          handsBelowEquityThreshold.push(sim);
-        }
-      });
-      this.handsAboveThirdEquity = (100 * handsAboveEquityThreshold.length / simulations.length);
-
-      this.averageEquityAboveThirdEquity = (handsAboveEquityThreshold.reduce((acc, sim) => acc + +sim.equity, 0)
-        / handsAboveEquityThreshold.length);
-
-      this.simulations = simulations;
+      };
       const end = window.performance.now();
       this.executionTime = (end - start).toFixed(0);
     });

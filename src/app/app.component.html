@@ -108,7 +108,8 @@
       *ngIf="
         beatTheDealerMode &&
         handsAboveThirdEquity &&
-        cardForm.get('runAllHands')?.value
+        runAllHands &&
+        cardForm.get('runAllFlops')?.value
       "
     >
       <div>
@@ -121,7 +122,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="mb-2 col" *ngFor="let simulation of simulations">
+      <div class="mb-2 col" *ngIf="simulation">
         <h3>Equity:</h3>
         <div>{{ simulation.equity | percent: "1.2-2" }}</div>
         <div *ngIf="simulation.player1Hand">
