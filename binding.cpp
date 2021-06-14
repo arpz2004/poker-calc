@@ -44,39 +44,75 @@ int LookupHand(vector<int> cards)
   return HR[p + cards[6]];
 }
 
+struct c_unique
+{
+  int current;
+  c_unique() { current = 0; }
+  int operator()() { return ++current; }
+} UniqueNumber;
+
+vector<vector<int>> getCombinations(int n, int r, vector<int> ignoreNumbers)
+{
+  std::vector<int> v(r);
+  std::vector<int>::iterator first = v.begin(), last = v.end();
+
+  std::generate(first, last, UniqueNumber);
+
+  bool firstRun = true;
+  vector<vector<int>> numbers;
+
+  while ((*first) != n - r + 1)
+  {
+    if (firstRun)
+    {
+      firstRun = false;
+    }
+    else
+    {
+      std::vector<int>::iterator mt = last;
+
+      while (*(--mt) == n - (last - mt) + 1)
+        ;
+      (*mt)++;
+      while (++mt != last)
+        *mt = *(mt - 1) + 1;
+    }
+
+    vector<int> number;
+
+    std::for_each(first, last, [&number, &ignoreNumbers](int card)
+                  {
+                    if (!(find(ignoreNumbers.begin(), ignoreNumbers.end(), card) != ignoreNumbers.end()))
+                    {
+                      number.push_back(card);
+                    }
+                  });
+    if (number.size() == r)
+    {
+      numbers.push_back(number);
+    }
+  }
+  return numbers;
+}
+
 vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> deadCards)
 {
   vector<int> baseHand;
   baseHand.insert(baseHand.end(), playerHand.begin(), playerHand.end());
   baseHand.insert(baseHand.end(), flop.begin(), flop.end());
-
   vector<int> cardsInPlay = deadCards;
   cardsInPlay.insert(cardsInPlay.end(), playerHand.begin(), playerHand.end());
   cardsInPlay.insert(cardsInPlay.end(), flop.begin(), flop.end());
 
   vector<int> handRanks;
-  vector<bool> v(52);
-  fill(v.begin(), v.begin() + 7 - baseHand.size(), true);
-  do
+  vector<vector<int>> hands = getCombinations(52, 7 - baseHand.size(), cardsInPlay);
+  for (int i = 0; i < hands.size(); i++)
   {
     vector<int> hand = baseHand;
-    for (int i = 0; i < 52; ++i)
-    {
-      if (v[i])
-      {
-        if (find(cardsInPlay.begin(), cardsInPlay.end(), i + 1) != cardsInPlay.end())
-        {
-          break;
-        }
-        hand.push_back(i + 1);
-      }
-    }
-    if (hand.size() == 7)
-    {
-      int handScore = LookupHand(hand);
-      handRanks.push_back(handScore);
-    }
-  } while (std::prev_permutation(v.begin(), v.end()));
+    hand.insert(hand.end(), hands[i].begin(), hands[i].end());
+    int handScore = LookupHand(hand);
+    handRanks.push_back(handScore);
+  }
   return handRanks;
 }
 
@@ -142,57 +178,6 @@ float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks
     }
   }
   return (float)player1Wins / (float)(2 * player1HandRanks.size());
-}
-
-struct c_unique
-{
-  int current;
-  c_unique() { current = 0; }
-  int operator()() { return ++current; }
-} UniqueNumber;
-
-vector<vector<int>> getCombinations(int n, int r, vector<int> ignoreNumbers)
-{
-  std::vector<int> v(r);
-  std::vector<int>::iterator first = v.begin(), last = v.end();
-
-  std::generate(first, last, UniqueNumber);
-
-  bool firstRun = true;
-  vector<vector<int>> numbers;
-
-  while ((*first) != n - r + 1)
-  {
-    if (firstRun)
-    {
-      firstRun = false;
-    }
-    else
-    {
-      std::vector<int>::iterator mt = last;
-
-      while (*(--mt) == n - (last - mt) + 1)
-        ;
-      (*mt)++;
-      while (++mt != last)
-        *mt = *(mt - 1) + 1;
-    }
-
-    vector<int> number;
-
-    std::for_each(first, last, [&number, &ignoreNumbers](int card)
-                  {
-                    if (!(find(ignoreNumbers.begin(), ignoreNumbers.end(), card) != ignoreNumbers.end()))
-                    {
-                      number.push_back(card);
-                    }
-                  });
-    if (number.size() == r)
-    {
-      numbers.push_back(number);
-    }
-  }
-  return numbers;
 }
 
 Value GetEquitiesWhenCalling(const CallbackInfo &info)

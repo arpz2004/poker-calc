@@ -118,6 +118,9 @@ export class AppComponent implements OnInit, OnDestroy {
       this.executionTime = (end - start).toFixed(0);
       console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.flopsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
       this.loading = false;
+    }, () => {
+      this.submitted = false;
+      this.loading = false;
     });
   }
 
@@ -148,6 +151,9 @@ export class AppComponent implements OnInit, OnDestroy {
       };
       const end = window.performance.now();
       this.executionTime = (end - start).toFixed(0);
+      this.loading = false;
+    }, () => {
+      this.submitted = false;
       this.loading = false;
     });
   }
