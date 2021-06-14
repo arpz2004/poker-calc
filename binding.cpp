@@ -220,21 +220,29 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   vector<float> equities;
   vector<float> equitiesWhenCalling;
 
-#pragma omp parallel for
-  for (int i = 0; i < flops.size(); i++)
+#pragma omp parallel
   {
-    vector<int> flop = flops[i];
-    vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
-    vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
-    float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
-    float equityThreshold = 0.33333333f;
-    if (equity > equityThreshold)
+    std::vector<float> equities_private;
+    std::vector<float> equitiesWhenCalling_private;
+#pragma omp for nowait
+    for (int i = 0; i < flops.size(); i++)
     {
-      equitiesWhenCalling.push_back(equity);
+      vector<int> flop = flops[i];
+      vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
+      vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
+      float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
+      float equityThreshold = 0.33333333f;
+      if (equity > equityThreshold)
+      {
+        equitiesWhenCalling_private.push_back(equity);
+      }
+      equities_private.push_back(equity);
+      std::printf("\rFlop %d of %zu", ++flopNo, flops.size());
+      std::fflush(stdout);
     }
-    equities.push_back(equity);
-    std::printf("\rFlop %d of %zu", ++flopNo, flops.size());
-    std::fflush(stdout);
+#pragma omp critical
+    equities.insert(equities.end(), equities_private.begin(), equities_private.end());
+    equitiesWhenCalling.insert(equitiesWhenCalling.end(), equitiesWhenCalling_private.begin(), equitiesWhenCalling_private.end());
   }
 
   Napi::Array equitiesWhenCallingArr = Napi::Array::New(info.Env(), equitiesWhenCalling.size());
@@ -299,14 +307,20 @@ Value GetEquity(const CallbackInfo &info)
     vector<vector<int>> hands = getCombinations(52, 2, cardsInPlay);
     vector<float> equities;
 
-#pragma omp parallel for
-    for (int i = 0; i < hands.size(); i++)
+#pragma omp parallel
     {
-      vector<int> player1HandResults = getHandRanks(player1Hand, flop, hands[i]);
-      vector<int> player2HandResults = getHandRanks(hands[i], flop, player1Hand);
-      equities.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
-      printf("\rHand %d of %zu", ++handNo, hands.size());
-      std::fflush(stdout);
+      std::vector<float> equities_private;
+#pragma omp for nowait
+      for (int i = 0; i < hands.size(); i++)
+      {
+        vector<int> player1HandResults = getHandRanks(player1Hand, flop, hands[i]);
+        vector<int> player2HandResults = getHandRanks(hands[i], flop, player1Hand);
+        equities_private.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
+        printf("\rHand %d of %zu", ++handNo, hands.size());
+        std::fflush(stdout);
+      }
+#pragma omp critical
+      equities.insert(equities.end(), equities_private.begin(), equities_private.end());
     }
     equity = Number::New(info.Env(), accumulate(equities.begin(), equities.end(), 0.0) / equities.size());
   }
