@@ -94,6 +94,7 @@ export class AppComponent implements OnInit, OnDestroy {
   calculateEquityOrEquitiesWhenCalling(): void {
     this.submitted = true;
     this.loading = true;
+    this.simulation = undefined;
     this.flopsAboveThirdEquity = -1;
     this.averageEquityAboveThirdEquity = -1;
     if (this.runAllHands && this.beatTheDealerMode && this.cardForm.get('runAllFlops')?.value) {

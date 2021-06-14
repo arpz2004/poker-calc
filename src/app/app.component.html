@@ -117,7 +117,7 @@
       Calculate
     </button>
   </form>
-  <div *ngIf="submitted" class="my-2">
+  <div *ngIf="submitted && !loading" class="my-2">
     <div *ngIf="executionTime">Calculated in {{ executionTime }}ms.</div>
     <div
       *ngIf="
