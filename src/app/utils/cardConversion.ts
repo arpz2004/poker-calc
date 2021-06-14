@@ -4,7 +4,7 @@ export const cardNotationToInt = (notation: string): number => {
   if (notation.length === 2) {
     cardValue = 4 * cardValues[notation[0] as keyof typeof cardValues] + cardSuits[notation[1] as keyof typeof cardSuits];
   } else if (notation.length === 1) {
-    cardValue = 4 * cardValues[notation[0] as keyof typeof cardValues] + Math.floor(Math.random() * 4);
+    cardValue = 4 * cardValues[notation[0] as keyof typeof cardValues] + Math.floor(Math.random() * 4) + 1;
   }
   return cardValue;
 };
