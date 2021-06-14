@@ -224,7 +224,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   {
     std::vector<float> equities_private;
     std::vector<float> equitiesWhenCalling_private;
-#pragma omp for nowait
+#pragma omp for schedule(dynamic) nowait
     for (int i = 0; i < flops.size(); i++)
     {
       vector<int> flop = flops[i];
@@ -310,7 +310,7 @@ Value GetEquity(const CallbackInfo &info)
 #pragma omp parallel
     {
       std::vector<float> equities_private;
-#pragma omp for nowait
+#pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < hands.size(); i++)
       {
         vector<int> player1HandResults = getHandRanks(player1Hand, flop, hands[i]);
