@@ -200,7 +200,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
 
   int flopNo = 0;
   vector<int> player2Hand;
-  vector<vector<int>> flops = getCombinations(10, 3, player1Hand);
+  vector<vector<int>> flops = getCombinations(52, 3, player1Hand);
 
   vector<float> equities;
   vector<float> equitiesWhenCalling;
