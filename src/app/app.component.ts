@@ -116,6 +116,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.flopsAboveThirdEquity;
       const end = window.performance.now();
       this.executionTime = (end - start).toFixed(0);
+      console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.flopsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
       this.loading = false;
     });
   }

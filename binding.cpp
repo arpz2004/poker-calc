@@ -151,6 +151,50 @@ struct c_unique
   int operator()() { return ++current; }
 } UniqueNumber;
 
+vector<vector<int>> getCombinations(int n, int r, vector<int> ignoreNumbers)
+{
+  std::vector<int> v(r);
+  std::vector<int>::iterator first = v.begin(), last = v.end();
+
+  std::generate(first, last, UniqueNumber);
+
+  bool firstRun = true;
+  vector<vector<int>> numbers;
+
+  while ((*first) != n - r + 1)
+  {
+    if (firstRun)
+    {
+      firstRun = false;
+    }
+    else
+    {
+      std::vector<int>::iterator mt = last;
+
+      while (*(--mt) == n - (last - mt) + 1)
+        ;
+      (*mt)++;
+      while (++mt != last)
+        *mt = *(mt - 1) + 1;
+    }
+
+    vector<int> number;
+
+    std::for_each(first, last, [&number, &ignoreNumbers](int card)
+                  {
+                    if (!(find(ignoreNumbers.begin(), ignoreNumbers.end(), card) != ignoreNumbers.end()))
+                    {
+                      number.push_back(card);
+                    }
+                  });
+    if (number.size() == r)
+    {
+      numbers.push_back(number);
+    }
+  }
+  return numbers;
+}
+
 Value GetEquitiesWhenCalling(const CallbackInfo &info)
 {
   Array player1HandArray = info[0].As<Array>();
@@ -170,53 +214,11 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   std::fclose(fin);
 
   int flopNo = 0;
-
-  int n = 52;
-  int r = 3;
-
   vector<int> player2Hand;
+  vector<vector<int>> flops = getCombinations(10, 3, player1Hand);
+
   vector<float> equities;
   vector<float> equitiesWhenCalling;
-
-  std::vector<int> myints(r);
-  std::vector<int>::iterator first = myints.begin(), last = myints.end();
-
-  std::generate(first, last, UniqueNumber);
-
-  bool firstRun = true;
-  vector<vector<int>> flops;
-
-  while ((*first) != n - r + 1)
-  {
-    if (firstRun)
-    {
-      firstRun = false;
-    }
-    else
-    {
-      std::vector<int>::iterator mt = last;
-
-      while (*(--mt) == n - (last - mt) + 1)
-        ;
-      (*mt)++;
-      while (++mt != last)
-        *mt = *(mt - 1) + 1;
-    }
-
-    vector<int> flop;
-
-    std::for_each(first, last, [&flop, &player1Hand](int card)
-                  {
-                    if (!(find(player1Hand.begin(), player1Hand.end(), card) != player1Hand.end()))
-                    {
-                      flop.push_back(card);
-                    }
-                  });
-    if (flop.size() == 3)
-    {
-      flops.push_back(flop);
-    }
-  }
 
 #pragma omp parallel for
   for (int i = 0; i < flops.size(); i++)
@@ -231,7 +233,7 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
       equitiesWhenCalling.push_back(equity);
     }
     equities.push_back(equity);
-    std::printf("\rFlop %d of %d", ++flopNo, flops.size());
+    std::printf("\rFlop %d of %zu", ++flopNo, flops.size());
     std::fflush(stdout);
   }
 
@@ -292,34 +294,20 @@ Value GetEquity(const CallbackInfo &info)
   Value equity;
   if (runAllHands)
   {
-    vector<float> equities;
     vector<int> cardsInPlay = player1Hand;
     cardsInPlay.insert(cardsInPlay.end(), flop.begin(), flop.end());
-    vector<bool> v(52);
-    fill(v.begin(), v.begin() + 2, true);
-    do
+    vector<vector<int>> hands = getCombinations(52, 2, cardsInPlay);
+    vector<float> equities;
+
+#pragma omp parallel for
+    for (int i = 0; i < hands.size(); i++)
     {
-      vector<int> hand;
-      for (int i = 0; i < 52; ++i)
-      {
-        if (v[i])
-        {
-          if (find(cardsInPlay.begin(), cardsInPlay.end(), i + 1) != cardsInPlay.end())
-          {
-            break;
-          }
-          hand.push_back(i + 1);
-        }
-      }
-      if (hand.size() == 2)
-      {
-        vector<int> player1HandResults = getHandRanks(player1Hand, flop, hand);
-        vector<int> player2HandResults = getHandRanks(hand, flop, player1Hand);
-        equities.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
-      }
-      printf("\rHand %d of %d", ++handNo, (52 * 51) / 2);
+      vector<int> player1HandResults = getHandRanks(player1Hand, flop, hands[i]);
+      vector<int> player2HandResults = getHandRanks(hands[i], flop, player1Hand);
+      equities.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
+      printf("\rHand %d of %zu", ++handNo, hands.size());
       std::fflush(stdout);
-    } while (std::prev_permutation(v.begin(), v.end()));
+    }
     equity = Number::New(info.Env(), accumulate(equities.begin(), equities.end(), 0.0) / equities.size());
   }
   else
