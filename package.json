@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve --open",
     "build": "ng build",
+    "build:server": "rm -rf build/Release && node-gyp build",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -22,6 +23,7 @@
     "bindings": "^1.5.0",
     "bootstrap": "^5.0.1",
     "node-addon-api": "^3.2.1",
+    "node-gyp": "^9.1.0",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
