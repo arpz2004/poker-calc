@@ -1,10 +1,53 @@
 <div class="container">
-  <form class="form">
-    <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-3" #calculate>
-      <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      Calculate
-    </button>
+  <form class="form" [formGroup]="cardForm">
+    <div class="d-flex">
+      <div class="me-3" formGroupName="community">
+        <label class="form-label">Community</label>
+        <div class="d-flex">
+          <div>
+            <input class="form-control" type="text" formControlName="card1" />
+          </div>
+          <div>
+            <input class="form-control" type="text" formControlName="card2" />
+          </div>
+          <div>
+            <input class="form-control" type="text" formControlName="card3" />
+          </div>
+          <div>
+            <input class="form-control" type="text" formControlName="card4" />
+          </div>
+          <div>
+            <input class="form-control" type="text" formControlName="card5" />
+          </div>
+        </div>
+      </div>
+      <div class="me-3" formGroupName="player">
+        <label class="form-label">Player</label>
+        <div class="d-flex">
+          <div>
+            <input class="form-control" type="text" formControlName="card1" />
+          </div>
+          <div>
+            <input class="form-control" type="text" formControlName="card2" />
+          </div>
+        </div>
+      </div>
+      <div class="me-3" formGroupName="dealer">
+        <label class="form-label">Dealer</label>
+        <div class="d-flex">
+          <input class="form-control" type="text" formControlName="card1" />
+          <input class="form-control" type="text" formControlName="card2" />
+        </div>
+      </div>
+    </div>
   </form>
+  <div class="my-5">
+    [{{cardArray}}]
+  </div>
+  <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-3">
+    <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    Calculate
+  </button>
   <div class="row">
     <div class="mb-2 col" *ngIf="simulation">
       <h3>Equity:</h3>

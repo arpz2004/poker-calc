@@ -7,6 +7,7 @@
     "build": "ng build",
     "build:server": "rm -rf build/Release && node-gyp build",
     "test": "ng test",
+    "test:server": "node ./test/binding.js",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },

@@ -164,6 +164,8 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
                                  { return value % 4; });
     vector<int> flopCardValues = Map(flop, [](int value)
                                      { return (value - 1) / 4; });
+    vector<int> communityCardValues = Map(communityCards, [](int value)
+                                          { return (value - 1) / 4; });
     vector<int> sortedSuitValues;
     sortedSuitValues.insert(sortedSuitValues.end(), suitValues.begin(), suitValues.end());
     sort(sortedSuitValues.begin(), sortedSuitValues.end());
@@ -201,7 +203,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
     else if (
         // Hidden pair or better
         LookupHand(postRiverHand) >> 12 >= 3 ||
-        (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCards)) ||
+        (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCardValues)) ||
         // Less than 21 dealer outs
         getOuts(playerHand, communityCards) < 21)
     {
@@ -260,6 +262,9 @@ float calculateProfitUTH(vector<int> deck)
 
 Value RunUthSimulations(const CallbackInfo &info)
 {
+  Array deckArray = info[0].As<Array>();
+  vector<int> deck;
+
   // Load the HandRanks.DAT file and map it into the HR array
   memset(HR, 0, sizeof(HR));
   FILE *fin = fopen("HandRanks.dat", "rb");
@@ -269,62 +274,74 @@ Value RunUthSimulations(const CallbackInfo &info)
   std::fclose(fin);
 
   float profit = 0;
-  int numberOfSimulations = 100000000;
-  for (int i = 0; i < numberOfSimulations; i++)
+  int numberOfSimulations = 1;
+  if (deckArray.Length() > 0)
   {
-    vector<int> deck = {1, 2, 3, 4, 5, 6, 7, 8,
-                        9, 10, 11, 12, 13, 14, 15,
-                        16, 17, 18, 19, 20, 21, 22,
-                        23, 24, 25, 26, 27, 28, 29,
-                        30, 31, 32, 33, 34, 35, 36,
-                        37, 38, 39, 40, 41, 42, 43,
-                        44, 45, 46, 47, 48, 49, 50,
-                        51, 52};
-    std::shuffle(std::begin(deck), std::end(deck), rng);
-    // vector<int> deck = {34, 52, 36, 23, 47, 14, 22, 46, 33};
-    // print(deck);
+    numberOfSimulations = 1;
+    for (size_t i = 0; i < deckArray.Length(); i++)
+    {
+      int value = (int)deckArray.Get(i).As<Number>();
+      deck.push_back(value);
+    }
     profit += calculateProfitUTH(deck);
   }
+  else
+  {
+
+    for (int i = 0; i < numberOfSimulations; i++)
+    {
+      deck = {1, 2, 3, 4, 5, 6, 7, 8,
+              9, 10, 11, 12, 13, 14, 15,
+              16, 17, 18, 19, 20, 21, 22,
+              23, 24, 25, 26, 27, 28, 29,
+              30, 31, 32, 33, 34, 35, 36,
+              37, 38, 39, 40, 41, 42, 43,
+              44, 45, 46, 47, 48, 49, 50,
+              51, 52};
+      std::shuffle(std::begin(deck), std::end(deck), rng);
+      profit += calculateProfitUTH(deck);
+    }
+  }
+  float equity = profit / (float)numberOfSimulations;
   cout << "\nProfit is:\n"
        << profit << "\nEquity is:\n"
-       << profit / (float)numberOfSimulations;
-  float equity = profit / (float)numberOfSimulations;
-  // vector<int> communityCards;
-  // communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
-  // vector<int> playerCards;
-  // playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
-  // vector<int> dealerCards;
-  // dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
-  // vector<int> playerHand;
-  // playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
-  // playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
-  // vector<int> dealerHand;
-  // dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
-  // dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+       << equity;
+  vector<int> communityCards;
+  communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
+  vector<int> playerCards;
+  playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
+  vector<int> dealerCards;
+  dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
+  vector<int> playerHand;
+  playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
+  playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
+  vector<int> dealerHand;
+  dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
+  dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
 
-  // Napi::Array playerCardsArr = Napi::Array::New(info.Env(), playerCards.size());
-  // uint32_t j = 0;
-  // for (auto &&it : playerCards)
-  // {
-  //   playerCardsArr[j++] = Number::New(info.Env(), it);
-  // }
-  // Napi::Array communityCardsArr = Napi::Array::New(info.Env(), communityCards.size());
-  // j = 0;
-  // for (auto &&it : communityCards)
-  // {
-  //   communityCardsArr[j++] = Number::New(info.Env(), it);
-  // }
-  // Napi::Array dealerCardsArr = Napi::Array::New(info.Env(), dealerCards.size());
-  // j = 0;
-  // for (auto &&it : dealerCards)
-  // {
-  //   dealerCardsArr[j++] = Number::New(info.Env(), it);
-  // }
+  Napi::Array playerCardsArr = Napi::Array::New(info.Env(), playerCards.size());
+  uint32_t j = 0;
+  for (auto &&it : playerCards)
+  {
+    playerCardsArr[j++] = Number::New(info.Env(), it);
+  }
+  Napi::Array communityCardsArr = Napi::Array::New(info.Env(), communityCards.size());
+  j = 0;
+  for (auto &&it : communityCards)
+  {
+    communityCardsArr[j++] = Number::New(info.Env(), it);
+  }
+  Napi::Array dealerCardsArr = Napi::Array::New(info.Env(), dealerCards.size());
+  j = 0;
+  for (auto &&it : dealerCards)
+  {
+    dealerCardsArr[j++] = Number::New(info.Env(), it);
+  }
   Env env = info.Env();
   Object obj = Object::New(env);
-  // obj.Set("playerCards", playerCardsArr);
-  // obj.Set("communityCards", communityCardsArr);
-  // obj.Set("dealerCards", dealerCardsArr);
+  obj.Set("playerCards", playerCardsArr);
+  obj.Set("communityCards", communityCardsArr);
+  obj.Set("dealerCards", dealerCardsArr);
   obj.Set("equity", equity);
   return obj;
 }
