@@ -1,155 +1,21 @@
 <div class="container">
-  <form
-    class="form"
-    [formGroup]="cardForm"
-    (ngSubmit)="calculateEquityOrEquitiesWhenCalling()"
-  >
-    <div class="d-flex">
-      <div class="me-3" formGroupName="player1">
-        <label class="form-label">Player1</label>
-        <div class="d-flex">
-          <div>
-            <input
-              class="form-control"
-              type="text"
-              formControlName="card1"
-              #input
-            />
-          </div>
-          <div>
-            <input
-              class="form-control"
-              type="text"
-              formControlName="card2"
-              #input
-            />
-          </div>
-        </div>
-      </div>
-      <div *ngIf="!runAllHands" class="me-3" formGroupName="player2">
-        <label class="form-label">Player2</label>
-        <div class="d-flex">
-          <input
-            class="form-control"
-            type="text"
-            formControlName="card1"
-            #input
-          />
-          <input
-            class="form-control"
-            type="text"
-            formControlName="card2"
-            #input
-          />
-        </div>
-      </div>
-      <div *ngIf="displayFlop" formGroupName="flop">
-        <label class="form-label">Flop</label>
-        <div class="d-flex">
-          <div>
-            <input
-              class="form-control"
-              type="text"
-              formControlName="card1"
-              #input
-            />
-          </div>
-          <div>
-            <input
-              class="form-control"
-              type="text"
-              formControlName="card2"
-              #input
-            />
-          </div>
-          <div>
-            <input
-              class="form-control"
-              type="text"
-              formControlName="card3"
-              #input
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="form-check mt-2">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        id="runAllFlops"
-        formControlName="runAllFlops"
-      />
-      <label class="form-check-label" for="runAllFlops"> Run All Flops </label>
-    </div>
-    <div class="form-check mt-2">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        id="runAllHands"
-        formControlName="runAllHands"
-      />
-      <label class="form-check-label" for="runAllHands"> Run All Hands </label>
-    </div>
-    <div class="form-check mt-2">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        id="beatTheDealer"
-        formControlName="beatTheDealer"
-      />
-      <label class="form-check-label" for="beatTheDealer">
-        Beat The Dealer Mode
-      </label>
-    </div>
-    <button
-      [disabled]="loading"
-      type="submit"
-      class="btn btn-primary mt-3"
-      #calculate
-    >
-      <span
-        *ngIf="loading"
-        class="spinner-border spinner-border-sm"
-        role="status"
-        aria-hidden="true"
-      ></span>
+  <form class="form">
+    <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-3" #calculate>
+      <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       Calculate
     </button>
   </form>
-  <div *ngIf="submitted && !loading" class="my-2">
-    <div *ngIf="executionTime">Calculated in {{ executionTime }}ms.</div>
-    <div
-      *ngIf="
-        beatTheDealerMode &&
-        flopsAboveThirdEquity &&
-        runAllHands &&
-        cardForm.get('runAllFlops')?.value &&
-        flopsAboveThirdEquity >= 0 &&
-        averageEquityAboveThirdEquity >= 0
-      "
-    >
-      <div>
-        {{ flopsAboveThirdEquity }} of {{ totalEquities }} flops above 33.33%
-        equity
+  <div class="row">
+    <div class="mb-2 col" *ngIf="simulation">
+      <h3>Equity:</h3>
+      <div>{{ simulation.equity }}</div>
+      <div *ngIf="simulation.playerCards">
+        Player Hand: {{ displayHand(simulation.playerCards) }}
       </div>
-      <div>
-        {{ averageEquityAboveThirdEquity | percent: "1.2-2" }} equity for flops
-        above 33.33% equity
+      <div *ngIf="simulation.dealerCards">
+        Dealer Hand: {{ displayHand(simulation.dealerCards) }}
       </div>
-    </div>
-    <div class="row">
-      <div class="mb-2 col" *ngIf="simulation">
-        <h3>Equity:</h3>
-        <div>{{ simulation.equity | percent: "1.2-2" }}</div>
-        <div *ngIf="simulation.player1Hand">
-          Player 1 Hand: {{ simulation.player1Hand }}
-        </div>
-        <div *ngIf="simulation.player2Hand">
-          Player 2 Hand: {{ simulation.player2Hand }}
-        </div>
-        <div *ngIf="flop">Flop: {{ flop }}</div>
-      </div>
+      <div *ngIf="simulation.communityCards">Community Cards: {{ displayHand(simulation.communityCards) }}</div>
     </div>
   </div>
 </div>

@@ -44,8 +44,13 @@ app.post("/api/getEquity", (req, res, next) => {
 });
 
 app.post("/api/runUthSimulations", (req, res, next) => {
-  runUthSimulations().then(() =>
-    res.status(200).json({})
+  runUthSimulations().then((data) =>
+    res.status(200).json({
+      playerCards: data.playerCards,
+      communityCards: data.communityCards,
+      dealerCards: data.dealerCards,
+      equity: data.equity
+    })
   );
 });
 

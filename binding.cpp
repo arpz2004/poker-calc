@@ -159,9 +159,11 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
     postRiverHand.insert(postRiverHand.end(), playerHand.begin(), playerHand.end());
     postRiverHand.insert(postRiverHand.end(), communityCards.begin(), communityCards.end());
     vector<int> cardValues = Map(postFlopHand, [](int value)
-                                 { return value / 4; });
+                                 { return (value - 1) / 4; });
     vector<int> suitValues = Map(postFlopHand, [](int value)
                                  { return value % 4; });
+    vector<int> flopCardValues = Map(flop, [](int value)
+                                     { return (value - 1) / 4; });
     vector<int> sortedSuitValues;
     sortedSuitValues.insert(sortedSuitValues.end(), suitValues.begin(), suitValues.end());
     sort(sortedSuitValues.begin(), sortedSuitValues.end());
@@ -179,7 +181,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
         (playerHand[0] >= 37 && (playerHand[1] >= 33 || (playerHand[1] >= 25 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
         (playerHand[1] >= 37 && (playerHand[0] >= 33 || (playerHand[0] >= 25 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
         // 33+
-        (playerHand[0] / 4 == playerHand[1] / 4 && playerHand[0] >= 5))
+        ((playerHand[0] - 1) / 4 == (playerHand[1] - 1) / 4 && playerHand[0] >= 5))
     {
       playBet = 4;
     }
@@ -188,7 +190,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
         // Two pair or better
         FiveCardLookup(postFlopHand) >> 12 >= 3 ||
         // Hidden pair except pocket deuces
-        (FiveCardLookup(postFlopHand) >> 12 == 2 && !(playerHand[0] / 4 == 0 && playerHand[1] / 4 == 0) && isUnique(flop)) ||
+        (FiveCardLookup(postFlopHand) >> 12 == 2 && !((playerHand[0] - 1) / 4 == 0 && (playerHand[1] - 1) / 4 == 0) && isUnique(flopCardValues)) ||
         // Four to a flush including a hidden 10 or better
         ((sortedSuitValues[1] == sortedSuitValues[4] || sortedSuitValues[0] == sortedSuitValues[3]) &&
          ((sortedSuitValues[2] == suitValues[0] && cardValues[0] >= 33) || (sortedSuitValues[2] == suitValues[1] && cardValues[1] >= 33))))
@@ -229,12 +231,6 @@ float calculateProfitUTH(vector<int> deck)
   float profit = 0;
   int playerHandRank = LookupHand(playerHand);
   int dealerHandRank = LookupHand(dealerHand);
-  cout << "\nplayerCards:\n";
-  print(playerCards);
-  cout << "\ncommunityCards:\n";
-  print(communityCards);
-  cout << "\ndealerCard:\n"s;
-  print(dealerCards);
   if (playerHandRank > dealerHandRank && playBet > 0)
   {
     // Ante bet
@@ -273,7 +269,8 @@ Value RunUthSimulations(const CallbackInfo &info)
   std::fclose(fin);
 
   float profit = 0;
-  for (int i = 0; i < 1; i++)
+  int numberOfSimulations = 100000000;
+  for (int i = 0; i < numberOfSimulations; i++)
   {
     vector<int> deck = {1, 2, 3, 4, 5, 6, 7, 8,
                         9, 10, 11, 12, 13, 14, 15,
@@ -284,13 +281,52 @@ Value RunUthSimulations(const CallbackInfo &info)
                         44, 45, 46, 47, 48, 49, 50,
                         51, 52};
     std::shuffle(std::begin(deck), std::end(deck), rng);
-    print(deck);
+    // vector<int> deck = {34, 52, 36, 23, 47, 14, 22, 46, 33};
+    // print(deck);
     profit += calculateProfitUTH(deck);
   }
   cout << "\nProfit is:\n"
        << profit << "\nEquity is:\n"
-       << profit / 1.0f;
-  return Number::New(info.Env(), profit);
+       << profit / (float)numberOfSimulations;
+  float equity = profit / (float)numberOfSimulations;
+  // vector<int> communityCards;
+  // communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
+  // vector<int> playerCards;
+  // playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
+  // vector<int> dealerCards;
+  // dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
+  // vector<int> playerHand;
+  // playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
+  // playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
+  // vector<int> dealerHand;
+  // dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
+  // dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+
+  // Napi::Array playerCardsArr = Napi::Array::New(info.Env(), playerCards.size());
+  // uint32_t j = 0;
+  // for (auto &&it : playerCards)
+  // {
+  //   playerCardsArr[j++] = Number::New(info.Env(), it);
+  // }
+  // Napi::Array communityCardsArr = Napi::Array::New(info.Env(), communityCards.size());
+  // j = 0;
+  // for (auto &&it : communityCards)
+  // {
+  //   communityCardsArr[j++] = Number::New(info.Env(), it);
+  // }
+  // Napi::Array dealerCardsArr = Napi::Array::New(info.Env(), dealerCards.size());
+  // j = 0;
+  // for (auto &&it : dealerCards)
+  // {
+  //   dealerCardsArr[j++] = Number::New(info.Env(), it);
+  // }
+  Env env = info.Env();
+  Object obj = Object::New(env);
+  // obj.Set("playerCards", playerCardsArr);
+  // obj.Set("communityCards", communityCardsArr);
+  // obj.Set("dealerCards", dealerCardsArr);
+  obj.Set("equity", equity);
+  return obj;
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)

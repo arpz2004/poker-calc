@@ -23,9 +23,19 @@ export class PokerEvalService {
     );
   }
 
-  runUthSimulations(): Observable<{}> {
+  runUthSimulations(): Observable<{
+    playerCards: number[],
+    communityCards: number[],
+    dealerCards: number[],
+    equity: number
+  }> {
     const requestBody = {};
-    return this.http.post<{}>
+    return this.http.post<{
+      playerCards: number[],
+      communityCards: number[],
+      dealerCards: number[],
+      equity: number
+    }>
       ('http://localhost:3000/api/runUthSimulations', requestBody);
   }
 }
