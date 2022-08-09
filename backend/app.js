@@ -29,8 +29,8 @@ async function getEquity(player1Hand, player2Hand, flop, beatTheDealerMode) {
   return data;
 }
 
-async function getEquitiesWhenCalling(player1Hand) {
-  const data = await binding.getEquitiesWhenCalling(player1Hand);
+async function runUthSimulations() {
+  const data = await binding.runUthSimulations();
   return data;
 }
 
@@ -43,13 +43,9 @@ app.post("/api/getEquity", (req, res, next) => {
   );
 });
 
-app.post("/api/getEquitiesWhenCalling", (req, res, next) => {
-  ({ player1Hand } = req.body);
-  getEquitiesWhenCalling(player1Hand).then((data) =>
-    res.status(200).json({
-      equitiesWhenCalling: data.equitiesWhenCalling,
-      totalEquities: data.totalEquities
-    })
+app.post("/api/runUthSimulations", (req, res, next) => {
+  runUthSimulations().then(() =>
+    res.status(200).json({})
   );
 });
 

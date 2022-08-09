@@ -3,6 +3,9 @@
 #include <cstring>
 #include <iterator>
 #include <numeric>
+#include <vector>
+#include <algorithm>
+#include <random>
 #include "omp.h"
 
 #define DWORD int32_t
@@ -10,11 +13,12 @@
 using namespace Napi;
 using namespace std;
 
-const int WORST_HAND_4S_OR_BETTER = 8651;
 const int ROYAL_FLUSH = 36874;
 
 // The handranks lookup table- loaded from HANDRANKS.DAT.
 int HR[32487834];
+
+auto rng = std::default_random_engine{std::random_device{}()};
 
 void print(std::vector<int> const &input)
 {
@@ -44,6 +48,27 @@ int LookupHand(vector<int> cards)
   return HR[p + cards[6]];
 }
 
+int FiveCardLookup(vector<int> cards)
+{
+  int p = HR[53 + cards[0]];
+  p = HR[p + cards[1]];
+  p = HR[p + cards[2]];
+  p = HR[p + cards[3]];
+  p = HR[p + cards[4]];
+  return HR[p];
+}
+
+int SixCardLookup(vector<int> cards)
+{
+  int p = HR[53 + cards[0]];
+  p = HR[p + cards[1]];
+  p = HR[p + cards[2]];
+  p = HR[p + cards[3]];
+  p = HR[p + cards[4]];
+  p = HR[p + cards[5]];
+  return HR[p];
+}
+
 struct c_unique
 {
   int current;
@@ -51,145 +76,194 @@ struct c_unique
   int operator()() { return ++current; }
 } UniqueNumber;
 
-vector<vector<int>> getCombinations(int n, int r, vector<int> ignoreNumbers)
+float getBlindBetPayTable(int handRank)
 {
-  std::vector<int> v(r);
-  std::vector<int>::iterator first = v.begin(), last = v.end();
-
-  std::generate(first, last, UniqueNumber);
-
-  bool firstRun = true;
-  vector<vector<int>> numbers;
-
-  while ((*first) != n - r + 1)
-  {
-    if (firstRun)
-    {
-      firstRun = false;
-    }
-    else
-    {
-      std::vector<int>::iterator mt = last;
-
-      while (*(--mt) == n - (last - mt) + 1)
-        ;
-      (*mt)++;
-      while (++mt != last)
-        *mt = *(mt - 1) + 1;
-    }
-
-    vector<int> number;
-
-    std::for_each(first, last, [&number, &ignoreNumbers](int card)
-                  {
-                    if (!(find(ignoreNumbers.begin(), ignoreNumbers.end(), card) != ignoreNumbers.end()))
-                    {
-                      number.push_back(card);
-                    }
-                  });
-    if (number.size() == r)
-    {
-      numbers.push_back(number);
-    }
-  }
-  return numbers;
-}
-
-vector<int> getHandRanks(vector<int> playerHand, vector<int> flop, vector<int> deadCards)
-{
-  vector<int> baseHand;
-  baseHand.insert(baseHand.end(), playerHand.begin(), playerHand.end());
-  baseHand.insert(baseHand.end(), flop.begin(), flop.end());
-  vector<int> cardsInPlay = deadCards;
-  cardsInPlay.insert(cardsInPlay.end(), playerHand.begin(), playerHand.end());
-  cardsInPlay.insert(cardsInPlay.end(), flop.begin(), flop.end());
-
-  vector<int> handRanks;
-  vector<vector<int>> hands = getCombinations(52, 7 - baseHand.size(), cardsInPlay);
-  for (int i = 0; i < hands.size(); i++)
-  {
-    vector<int> hand = baseHand;
-    hand.insert(hand.end(), hands[i].begin(), hands[i].end());
-    int handScore = LookupHand(hand);
-    handRanks.push_back(handScore);
-  }
-  return handRanks;
-}
-
-float getBeatTheDealerMultiplier(int handRank)
-{
-  float multiplier = 1;
+  float multiplier = 0;
   int handType = handRank >> 12;
   switch (handType)
   {
-  case 6:
-    multiplier = 7.0f / 6.0f;
+  case 5:
+    multiplier = 1;
     break;
-  case 7:
+  case 6:
     multiplier = 1.5f;
     break;
+  case 7:
+    multiplier = 3;
+    break;
   case 8:
-    multiplier = 25.0f / 6.0f;
+    multiplier = 10;
     break;
   case 9:
     if (handRank == ROYAL_FLUSH)
     {
-      multiplier = 205.0f / 6.0f;
+      multiplier = 500;
     }
     else
     {
-      multiplier = 55.0f / 6.0f;
+      multiplier = 50;
     }
     break;
   }
   return multiplier;
 }
 
-float calculateEquityBeatTheDealer(vector<int> player1HandRanks, vector<int> player2HandRanks)
+bool isUnique(vector<int> &x)
 {
-  int sizeComparison = player2HandRanks.size() / player1HandRanks.size();
-  float player1Wins = 0;
-  for (int i = 0; i < player2HandRanks.size(); i++)
-  {
-    if (player1HandRanks[i / sizeComparison] > player2HandRanks[i] && player2HandRanks[i] >= WORST_HAND_4S_OR_BETTER)
-    {
-      player1Wins += getBeatTheDealerMultiplier(player1HandRanks[i / sizeComparison]);
-    }
-    else if (player1HandRanks[i / sizeComparison] == player2HandRanks[i] || player2HandRanks[i] < WORST_HAND_4S_OR_BETTER)
-    {
-      player1Wins += 0.5f;
-    }
-  }
-  return (float)player1Wins / (float)(player2HandRanks.size());
+  sort(x.begin(), x.end());
+  return adjacent_find(x.begin(), x.end()) == x.end();
 }
 
-float calculateEquity(vector<int> player1HandRanks, vector<int> player2HandRanks)
+template <class T, class Func>
+auto Map(const std::vector<T> &input_array, Func op)
 {
-  int player1Wins = 0;
-  for (int i = 0; i < player1HandRanks.size(); i++)
-  {
-    if (player1HandRanks[i] > player2HandRanks[i])
-    {
-      player1Wins += 2;
-    }
-    else if (player1HandRanks[i] == player2HandRanks[i])
-    {
-      player1Wins++;
-    }
-  }
-  return (float)player1Wins / (float)(2 * player1HandRanks.size());
+  std::vector<int> result_array;
+  std::transform(input_array.begin(), input_array.end(), std::back_inserter(result_array), op);
+  return result_array;
 }
 
-Value GetEquitiesWhenCalling(const CallbackInfo &info)
+int getOuts(vector<int> hand, vector<int> communityCards)
 {
-  Array player1HandArray = info[0].As<Array>();
-  vector<int> player1Hand;
-  for (size_t i = 0; i < player1HandArray.Length(); i++)
+  vector<int> currentHand;
+  currentHand.insert(currentHand.end(), hand.begin(), hand.end());
+  currentHand.insert(currentHand.end(), communityCards.begin(), communityCards.end());
+  int dealerOuts = 0;
+  for (int i = 1; i <= 52; i++)
   {
-    int value = (int)player1HandArray.Get(i).As<Number>();
-    player1Hand.push_back(value);
+    if (!(find(currentHand.begin(), currentHand.end(), i) != currentHand.end()))
+    {
+      vector<int> dealerHand;
+      dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+      dealerHand.insert(dealerHand.end(), i);
+      if (SixCardLookup(dealerHand) > LookupHand(currentHand))
+      {
+        dealerOuts++;
+      }
+    }
   }
+  return dealerOuts;
+}
 
+int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> knownFlopCards, vector<int> knownDealerCards)
+{
+  int playBet = 0;
+  // Basic Strategy
+  if (knownFlopCards.size() == 0 && knownDealerCards.size() == 0)
+  {
+    vector<int> flop;
+    flop.insert(flop.end(), communityCards.begin(), communityCards.end() - 2);
+    vector<int> postFlopHand;
+    postFlopHand.insert(postFlopHand.end(), playerHand.begin(), playerHand.end());
+    postFlopHand.insert(postFlopHand.end(), flop.begin(), flop.end());
+    vector<int> postRiverHand;
+    postRiverHand.insert(postRiverHand.end(), playerHand.begin(), playerHand.end());
+    postRiverHand.insert(postRiverHand.end(), communityCards.begin(), communityCards.end());
+    vector<int> cardValues = Map(postFlopHand, [](int value)
+                                 { return value / 4; });
+    vector<int> suitValues = Map(postFlopHand, [](int value)
+                                 { return value % 4; });
+    vector<int> sortedSuitValues;
+    sortedSuitValues.insert(sortedSuitValues.end(), suitValues.begin(), suitValues.end());
+    sort(sortedSuitValues.begin(), sortedSuitValues.end());
+    // Preflop
+    if (
+        // Ax
+        playerHand[0] >= 49 || playerHand[1] >= 49 ||
+        // K2s+, K5+
+        (playerHand[0] >= 45 && (playerHand[1] >= 13 || (playerHand[0] - playerHand[1]) % 4 == 0)) ||
+        (playerHand[1] >= 45 && (playerHand[0] >= 13 || (playerHand[1] - playerHand[0]) % 4 == 0)) ||
+        // Q6s+, Q8+
+        (playerHand[0] >= 41 && (playerHand[1] >= 25 || (playerHand[1] >= 17 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
+        (playerHand[1] >= 41 && (playerHand[0] >= 25 || (playerHand[0] >= 17 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
+        // J8s+, JT+
+        (playerHand[0] >= 37 && (playerHand[1] >= 33 || (playerHand[1] >= 25 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
+        (playerHand[1] >= 37 && (playerHand[0] >= 33 || (playerHand[0] >= 25 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
+        // 33+
+        (playerHand[0] / 4 == playerHand[1] / 4 && playerHand[0] >= 5))
+    {
+      playBet = 4;
+    }
+    // Postflop
+    else if (
+        // Two pair or better
+        FiveCardLookup(postFlopHand) >> 12 >= 3 ||
+        // Hidden pair except pocket deuces
+        (FiveCardLookup(postFlopHand) >> 12 == 2 && !(playerHand[0] / 4 == 0 && playerHand[1] / 4 == 0) && isUnique(flop)) ||
+        // Four to a flush including a hidden 10 or better
+        ((sortedSuitValues[1] == sortedSuitValues[4] || sortedSuitValues[0] == sortedSuitValues[3]) &&
+         ((sortedSuitValues[2] == suitValues[0] && cardValues[0] >= 33) || (sortedSuitValues[2] == suitValues[1] && cardValues[1] >= 33))))
+    {
+      playBet = 2;
+    }
+    // Post-river
+    else if (
+        // Hidden pair or better
+        LookupHand(postRiverHand) >> 12 >= 3 ||
+        (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCards)) ||
+        // Less than 21 dealer outs
+        getOuts(playerHand, communityCards) < 21)
+    {
+      playBet = 1;
+    }
+  }
+  return playBet;
+}
+
+float calculateProfitUTH(vector<int> deck)
+{
+  vector<int> communityCards;
+  communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
+  vector<int> playerCards;
+  playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
+  vector<int> dealerCards;
+  dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
+  vector<int> playerHand;
+  playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
+  playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
+  vector<int> dealerHand;
+  dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
+  dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+  vector<int> knownFlopCards;
+  vector<int> knownDealerCards;
+  int playBet = getPlayBet(playerCards, communityCards, knownFlopCards, knownDealerCards);
+  float profit = 0;
+  int playerHandRank = LookupHand(playerHand);
+  int dealerHandRank = LookupHand(dealerHand);
+  cout << "\nplayerCards:\n";
+  print(playerCards);
+  cout << "\ncommunityCards:\n";
+  print(communityCards);
+  cout << "\ndealerCard:\n"s;
+  print(dealerCards);
+  if (playerHandRank > dealerHandRank && playBet > 0)
+  {
+    // Ante bet
+    if (dealerHandRank >> 12 > 1)
+    {
+      profit += 1;
+    }
+    // Play bet
+    profit += playBet;
+    // Blind bet
+    profit += getBlindBetPayTable(playerHandRank);
+  }
+  else if (playerHandRank < dealerHandRank || playBet == 0)
+  {
+    // Ante bet
+    if (dealerHandRank >> 12 > 1)
+    {
+      profit -= 1;
+    }
+    // Play bet
+    profit -= playBet;
+    // Blind bet
+    profit -= 1;
+  }
+  return profit;
+}
+
+Value RunUthSimulations(const CallbackInfo &info)
+{
   // Load the HandRanks.DAT file and map it into the HR array
   memset(HR, 0, sizeof(HR));
   FILE *fin = fopen("HandRanks.dat", "rb");
@@ -198,130 +272,30 @@ Value GetEquitiesWhenCalling(const CallbackInfo &info)
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   std::fclose(fin);
 
-  int flopNo = 0;
-  vector<int> player2Hand;
-  vector<vector<int>> flops = getCombinations(52, 3, player1Hand);
-
-  vector<float> equities;
-  vector<float> equitiesWhenCalling;
-
-#pragma omp parallel
+  float profit = 0;
+  for (int i = 0; i < 1; i++)
   {
-    std::vector<float> equities_private;
-    std::vector<float> equitiesWhenCalling_private;
-#pragma omp for schedule(dynamic) nowait
-    for (int i = 0; i < flops.size(); i++)
-    {
-      vector<int> flop = flops[i];
-      vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
-      vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
-      float equity = calculateEquityBeatTheDealer(player1HandResults, player2HandResults);
-      float equityThreshold = 0.33333333f;
-      if (equity > equityThreshold)
-      {
-        equitiesWhenCalling_private.push_back(equity);
-      }
-      equities_private.push_back(equity);
-      std::printf("\rFlop %d of %zu", ++flopNo, flops.size());
-      std::fflush(stdout);
-    }
-#pragma omp critical
-    equities.insert(equities.end(), equities_private.begin(), equities_private.end());
-    equitiesWhenCalling.insert(equitiesWhenCalling.end(), equitiesWhenCalling_private.begin(), equitiesWhenCalling_private.end());
+    vector<int> deck = {1, 2, 3, 4, 5, 6, 7, 8,
+                        9, 10, 11, 12, 13, 14, 15,
+                        16, 17, 18, 19, 20, 21, 22,
+                        23, 24, 25, 26, 27, 28, 29,
+                        30, 31, 32, 33, 34, 35, 36,
+                        37, 38, 39, 40, 41, 42, 43,
+                        44, 45, 46, 47, 48, 49, 50,
+                        51, 52};
+    std::shuffle(std::begin(deck), std::end(deck), rng);
+    print(deck);
+    profit += calculateProfitUTH(deck);
   }
-
-  Napi::Array equitiesWhenCallingArr = Napi::Array::New(info.Env(), equitiesWhenCalling.size());
-  uint32_t i = 0;
-  for (auto &&it : equitiesWhenCalling)
-  {
-    equitiesWhenCallingArr[i++] = Number::New(info.Env(), it);
-  }
-
-  Env env = info.Env();
-  Object obj = Object::New(env);
-  obj.Set("equitiesWhenCalling", equitiesWhenCallingArr);
-  obj.Set("totalEquities", equities.size());
-  return obj;
-}
-
-Value GetEquity(const CallbackInfo &info)
-{
-  Array player1HandArray = info[0].As<Array>();
-  Array player2HandArray = info[1].As<Array>();
-  Array flopArray = info[2].As<Array>();
-  Boolean beatTheDealerMode = info[3].As<Boolean>();
-  vector<int> player1Hand;
-  vector<int> player2Hand;
-  vector<int> flop;
-  bool runAllHands = player2HandArray.Length() == 0;
-
-  for (size_t i = 0; i < player1HandArray.Length(); i++)
-  {
-    int value = (int)player1HandArray.Get(i).As<Number>();
-    player1Hand.push_back(value);
-  }
-  if (!runAllHands)
-  {
-    for (size_t i = 0; i < player2HandArray.Length(); i++)
-    {
-      int value = (int)player2HandArray.Get(i).As<Number>();
-      player2Hand.push_back(value);
-    }
-  }
-  for (size_t i = 0; i < flopArray.Length(); i++)
-  {
-    int value = (int)flopArray.Get(i).As<Number>();
-    flop.push_back(value);
-  }
-
-  // Load the HandRanks.DAT file and map it into the HR array
-  memset(HR, 0, sizeof(HR));
-  FILE *fin = fopen("HandRanks.dat", "rb");
-  if (!fin)
-    return String::New(info.Env(), "fin");
-  size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
-  std::fclose(fin);
-
-  int handNo = 0;
-
-  Value equity;
-  if (runAllHands)
-  {
-    vector<int> cardsInPlay = player1Hand;
-    cardsInPlay.insert(cardsInPlay.end(), flop.begin(), flop.end());
-    vector<vector<int>> hands = getCombinations(52, 2, cardsInPlay);
-    vector<float> equities;
-
-#pragma omp parallel
-    {
-      std::vector<float> equities_private;
-#pragma omp for schedule(dynamic) nowait
-      for (int i = 0; i < hands.size(); i++)
-      {
-        vector<int> player1HandResults = getHandRanks(player1Hand, flop, hands[i]);
-        vector<int> player2HandResults = getHandRanks(hands[i], flop, player1Hand);
-        equities_private.push_back(beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
-        printf("\rHand %d of %zu", ++handNo, hands.size());
-        std::fflush(stdout);
-      }
-#pragma omp critical
-      equities.insert(equities.end(), equities_private.begin(), equities_private.end());
-    }
-    equity = Number::New(info.Env(), accumulate(equities.begin(), equities.end(), 0.0) / equities.size());
-  }
-  else
-  {
-    vector<int> player1HandResults = getHandRanks(player1Hand, flop, player2Hand);
-    vector<int> player2HandResults = getHandRanks(player2Hand, flop, player1Hand);
-    equity = Number::New(info.Env(), beatTheDealerMode ? calculateEquityBeatTheDealer(player1HandResults, player2HandResults) : calculateEquity(player1HandResults, player2HandResults));
-  }
-  return equity;
+  cout << "\nProfit is:\n"
+       << profit << "\nEquity is:\n"
+       << profit / 1.0f;
+  return Number::New(info.Env(), profit);
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
-  exports.Set("getEquity", Function::New(env, GetEquity));
-  exports.Set("getEquitiesWhenCalling", Function::New(env, GetEquitiesWhenCalling));
+  exports.Set("runUthSimulations", Function::New(env, RunUthSimulations));
   return exports;
 }
 

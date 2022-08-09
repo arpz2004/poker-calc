@@ -97,32 +97,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.simulation = undefined;
     this.flopsAboveThirdEquity = -1;
     this.averageEquityAboveThirdEquity = -1;
-    if (this.runAllHands && this.beatTheDealerMode && this.cardForm.get('runAllFlops')?.value) {
-      this.calculateEquitiesWhenCalling();
-    } else {
-      this.calculateEquity();
-    }
-  }
-
-  calculateEquitiesWhenCalling(): void {
-    const player1Hand: number[] = [
-      this.cardForm.get('player1')?.get('card1')?.value,
-      this.cardForm.get('player1')?.get('card2')?.value
-    ].filter(x => x).map(card => cardNotationToInt(card));
-    const start = window.performance.now();
-    this.pokerEvalService.getEquitiesWhenCalling(player1Hand).subscribe(equities => {
-      const equitiesWhenCalling = equities.equitiesWhenCalling;
-      this.totalEquities = equities.totalEquities;
-      this.flopsAboveThirdEquity = equitiesWhenCalling.length;
-      this.averageEquityAboveThirdEquity = equitiesWhenCalling.reduce((a, b) => a + b) / this.flopsAboveThirdEquity;
-      const end = window.performance.now();
-      this.executionTime = (end - start).toFixed(0);
-      console.log(equitiesWhenCalling, ' Average: ', this.averageEquityAboveThirdEquity, ' Length: ', this.flopsAboveThirdEquity, ' Total Equities: ', this.totalEquities);
+    this.pokerEvalService.runUthSimulations().subscribe(() => {
       this.loading = false;
     }, () => {
       this.submitted = false;
       this.loading = false;
     });
+    // this.calculateEquity();
   }
 
 

@@ -23,17 +23,9 @@ export class PokerEvalService {
     );
   }
 
-  getEquitiesWhenCalling(player1Hand: number[]): Observable<{
-    equitiesWhenCalling: number[],
-    totalEquities: number
-  }> {
-    const requestBody = {
-      player1Hand
-    };
-    return this.http.post<{
-      equitiesWhenCalling: number[],
-      totalEquities: number
-    }
-    >('http://localhost:3000/api/getEquitiesWhenCalling', requestBody);
+  runUthSimulations(): Observable<{}> {
+    const requestBody = {};
+    return this.http.post<{}>
+      ('http://localhost:3000/api/runUthSimulations', requestBody);
   }
 }
