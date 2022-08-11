@@ -1,12 +1,25 @@
 import { TestBed } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { of } from 'rxjs';
 import { AppComponent } from './app.component';
+import { PokerEvalService } from './services/pokerEval.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
+    const pokerEvalService = jasmine.createSpyObj('PokerEvalService', ['runUthSimulations']);
+    pokerEvalService.runUthSimulations.and.returnValue(of({
+      playerCards: [],
+      communityCards: [],
+      dealerCards: [],
+      profit: 0,
+      equity: 0
+    }))
     await TestBed.configureTestingModule({
+      imports: [FormsModule, ReactiveFormsModule],
       declarations: [
         AppComponent
       ],
+      providers: [{ provide: PokerEvalService, useValue: pokerEvalService }]
     }).compileComponents();
   });
 
@@ -22,10 +35,4 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('poker-calc');
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('poker-calc app is running!');
-  });
 });
