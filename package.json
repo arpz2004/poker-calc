@@ -1,14 +1,11 @@
 {
   "name": "poker-calc",
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --open",
     "build": "ng build",
-    "build:server": "rm -rf build/Release && node-gyp build",
     "test": "ng test",
-    "test:server": "jasmine-ts",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
@@ -36,11 +33,9 @@
     "@angular/cli": "~11.0.3",
     "@angular/compiler-cli": "~11.0.3",
     "@types/jasmine": "~3.6.0",
-    "@types/node": "^12.20.55",
     "codelyzer": "^6.0.0",
     "jasmine-core": "~3.6.0",
     "jasmine-spec-reporter": "~5.0.0",
-    "jasmine-ts": "^0.4.0",
     "karma": "~5.1.0",
     "karma-chrome-launcher": "~3.1.0",
     "karma-coverage": "~2.0.3",
