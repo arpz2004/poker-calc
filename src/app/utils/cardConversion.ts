@@ -26,4 +26,3 @@ export const cardValues = {
 };
 
 export const cardSuits = { c: 1, d: 2, h: 3, s: 4 };
-

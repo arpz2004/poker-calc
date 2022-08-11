@@ -1,41 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { SimulationResults } from '../models/simulationResults';
 
 @Injectable({ providedIn: 'root' })
 export class PokerEvalService {
 
   constructor(private http: HttpClient) { }
 
-  getEquity(player1Hand: number[], player2Hand: number[], flop: number[], beatTheDealerMode: boolean): Observable<number> {
-    const requestBody = {
-      player1Hand,
-      player2Hand,
-      flop,
-      beatTheDealerMode
-    };
-    return this.http.post<{
-      equity: number
-    }
-    >('http://localhost:3000/api/getEquity', requestBody).pipe(
-      map(val => val.equity)
-    );
-  }
-
-  runUthSimulations(): Observable<{
-    playerCards: number[],
-    communityCards: number[],
-    dealerCards: number[],
-    equity: number
-  }> {
+  runUthSimulations(): Observable<SimulationResults> {
     const requestBody = {};
-    return this.http.post<{
-      playerCards: number[],
-      communityCards: number[],
-      dealerCards: number[],
-      equity: number
-    }>
+    return this.http.post<SimulationResults>
       ('http://localhost:3000/api/runUthSimulations', requestBody);
   }
 }

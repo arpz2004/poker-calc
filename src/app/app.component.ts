@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { SimulationResults } from './models/simulationResults';
 import { PokerEvalService } from './services/pokerEval.service';
 import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
 import { handDisplay } from './utils/displayHand';
@@ -17,12 +18,7 @@ export class AppComponent implements OnInit, OnDestroy {
   submitted = false;
   loading = false;
   complete: Subject<void> = new Subject();
-  simulation?: {
-    playerCards: number[],
-    communityCards: number[],
-    dealerCards: number[],
-    equity: number
-  };
+  simulation?: SimulationResults;
   cardArray: number[] = [];
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }

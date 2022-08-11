@@ -342,6 +342,7 @@ Value RunUthSimulations(const CallbackInfo &info)
   obj.Set("playerCards", playerCardsArr);
   obj.Set("communityCards", communityCardsArr);
   obj.Set("dealerCards", dealerCardsArr);
+  obj.Set("profit", profit);
   obj.Set("equity", equity);
   return obj;
 }
