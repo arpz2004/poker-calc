@@ -9,6 +9,13 @@
     "removeComments": false,
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
-    "allowJs": true
-  }
+    "allowJs": true,
+    "types": [
+      "jasmine",
+      "node"
+    ]
+  },
+  "include": [
+    "test/*.spec.ts"
+  ]
 }

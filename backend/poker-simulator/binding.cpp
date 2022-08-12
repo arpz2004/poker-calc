@@ -303,9 +303,6 @@ Value RunUthSimulations(const CallbackInfo &info)
     }
   }
   float equity = profit / (float)numberOfSimulations;
-  cout << "\nProfit is:\n"
-       << profit << "\nEquity is:\n"
-       << equity;
   vector<int> communityCards;
   communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
   vector<int> playerCards;
