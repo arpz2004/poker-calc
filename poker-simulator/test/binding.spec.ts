@@ -1,4 +1,4 @@
-import { cardNotationToInt } from '../../../src/app/utils/cardConversion';
+import { cardNotationToInt } from '../../src/app/utils/cardConversion';
 import * as bindings from 'bindings';
 const binding = bindings('native');
 const cnToInt = (cards: string[]) => cards.map(card => cardNotationToInt(card));
