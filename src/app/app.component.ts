@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SimulationResults } from './models/simulationResults';
 import { PokerEvalService } from './services/pokerEval.service';
-import { cardNotationToInt, cardSuits, cardValues } from './utils/cardConversion';
+import { cardSuits, cardValues } from './utils/cardConversion';
 import { handDisplay } from './utils/displayHand';
 
 @Component({
