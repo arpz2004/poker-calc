@@ -1,44 +1,8 @@
 <div class="container">
-  <form class="form" [formGroup]="cardForm">
-    <div class="d-flex">
-      <div class="me-3" formGroupName="community">
-        <label class="form-label">Community</label>
-        <div class="d-flex">
-          <div>
-            <input class="form-control" type="text" formControlName="card1" />
-          </div>
-          <div>
-            <input class="form-control" type="text" formControlName="card2" />
-          </div>
-          <div>
-            <input class="form-control" type="text" formControlName="card3" />
-          </div>
-          <div>
-            <input class="form-control" type="text" formControlName="card4" />
-          </div>
-          <div>
-            <input class="form-control" type="text" formControlName="card5" />
-          </div>
-        </div>
-      </div>
-      <div class="me-3" formGroupName="player">
-        <label class="form-label">Player</label>
-        <div class="d-flex">
-          <div>
-            <input class="form-control" type="text" formControlName="card1" />
-          </div>
-          <div>
-            <input class="form-control" type="text" formControlName="card2" />
-          </div>
-        </div>
-      </div>
-      <div class="me-3" formGroupName="dealer">
-        <label class="form-label">Dealer</label>
-        <div class="d-flex">
-          <input class="form-control" type="text" formControlName="card1" />
-          <input class="form-control" type="text" formControlName="card2" />
-        </div>
-      </div>
+  <form class="form" [formGroup]="simulationForm">
+    <label class="form-label">Number of Simulations</label>
+    <div>
+      <input class="form-control" type="text" formControlName="numberOfSimulations" />
     </div>
   </form>
   <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-3">
@@ -49,15 +13,6 @@
     <div class="mb-2 col" *ngIf="simulation">
       <h3>Edge:</h3>
       <div>{{ simulation.edge | percent:'1.2' }}</div>
-      <ng-container *ngIf="simulation.edge === simulation.profit">
-        <div *ngIf="simulation.playerCards">
-          Player Hand: {{ displayHand(simulation.playerCards) }}
-        </div>
-        <div *ngIf="simulation.dealerCards">
-          Dealer Hand: {{ displayHand(simulation.dealerCards) }}
-        </div>
-        <div *ngIf="simulation.communityCards">Community Cards: {{ displayHand(simulation.communityCards) }}</div>
-      </ng-container>
     </div>
   </div>
 </div>

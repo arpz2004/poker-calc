@@ -19,13 +19,13 @@ app.use((req, res, next) => {
   next();
 });
 
-async function runUthSimulations() {
-  const data = await binding.runUthSimulations([]);
+async function runUthSimulations(numberOfSimulations) {
+  const data = await binding.runUthSimulations([], numberOfSimulations);
   return data;
 }
 
 app.post("/api/runUthSimulations", (req, res, next) => {
-  runUthSimulations().then((data) =>
+  runUthSimulations(req.body.numberOfSimulations).then((data) =>
     res.status(200).json({
       playerCards: data.playerCards,
       communityCards: data.communityCards,

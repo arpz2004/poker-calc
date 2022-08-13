@@ -8,8 +8,10 @@ export class PokerEvalService {
 
   constructor(private http: HttpClient) { }
 
-  runUthSimulations(): Observable<SimulationResults> {
-    const requestBody = {};
+  runUthSimulations(numberOfSimulations: number): Observable<SimulationResults> {
+    const requestBody = {
+      numberOfSimulations
+    };
     return this.http.post<SimulationResults>
       ('http://localhost:3000/api/runUthSimulations', requestBody);
   }

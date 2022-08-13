@@ -263,6 +263,8 @@ float calculateProfitUTH(vector<int> deck)
 Value RunUthSimulations(const CallbackInfo &info)
 {
   Array deckArray = info[0].As<Array>();
+  int numberOfSimulations = info[1].ToNumber();
+  cout << "numberOfSimulations: " << numberOfSimulations;
   vector<int> deck;
 
   // Load the HandRanks.DAT file and map it into the HR array
@@ -274,7 +276,6 @@ Value RunUthSimulations(const CallbackInfo &info)
   std::fclose(fin);
 
   float profit = 0;
-  int numberOfSimulations = 10000000;
   if (deckArray.Length() > 0)
   {
     numberOfSimulations = 1;
