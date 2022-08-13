@@ -274,7 +274,7 @@ Value RunUthSimulations(const CallbackInfo &info)
   std::fclose(fin);
 
   float profit = 0;
-  int numberOfSimulations = 100000000;
+  int numberOfSimulations = 10000000;
   if (deckArray.Length() > 0)
   {
     numberOfSimulations = 1;

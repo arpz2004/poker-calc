@@ -30,6 +30,7 @@ app.post("/api/runUthSimulations", (req, res, next) => {
       playerCards: data.playerCards,
       communityCards: data.communityCards,
       dealerCards: data.dealerCards,
+      profit: data.profit,
       equity: data.equity
     })
   );
