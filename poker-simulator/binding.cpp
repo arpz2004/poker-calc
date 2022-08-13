@@ -302,7 +302,7 @@ Value RunUthSimulations(const CallbackInfo &info)
       profit += calculateProfitUTH(deck);
     }
   }
-  float equity = profit / (float)numberOfSimulations;
+  float edge = profit / (float)numberOfSimulations;
   vector<int> communityCards;
   communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
   vector<int> playerCards;
@@ -340,7 +340,7 @@ Value RunUthSimulations(const CallbackInfo &info)
   obj.Set("communityCards", communityCardsArr);
   obj.Set("dealerCards", dealerCardsArr);
   obj.Set("profit", profit);
-  obj.Set("equity", equity);
+  obj.Set("edge", edge);
   return obj;
 }
 

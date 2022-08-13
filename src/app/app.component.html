@@ -47,15 +47,17 @@
   </button>
   <div class="row">
     <div class="mb-2 col" *ngIf="simulation">
-      <h3>Equity:</h3>
-      <div>{{ simulation.equity }}</div>
-      <div *ngIf="simulation.playerCards">
-        Player Hand: {{ displayHand(simulation.playerCards) }}
-      </div>
-      <div *ngIf="simulation.dealerCards">
-        Dealer Hand: {{ displayHand(simulation.dealerCards) }}
-      </div>
-      <div *ngIf="simulation.communityCards">Community Cards: {{ displayHand(simulation.communityCards) }}</div>
+      <h3>Edge:</h3>
+      <div>{{ simulation.edge | percent:'1.2' }}</div>
+      <ng-container *ngIf="simulation.edge === simulation.profit">
+        <div *ngIf="simulation.playerCards">
+          Player Hand: {{ displayHand(simulation.playerCards) }}
+        </div>
+        <div *ngIf="simulation.dealerCards">
+          Dealer Hand: {{ displayHand(simulation.dealerCards) }}
+        </div>
+        <div *ngIf="simulation.communityCards">Community Cards: {{ displayHand(simulation.communityCards) }}</div>
+      </ng-container>
     </div>
   </div>
 </div>

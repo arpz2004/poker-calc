@@ -19,7 +19,7 @@ describe('Base scenarios', () => {
         playerCards: [6, 7],
         dealerCards: [8, 9],
         profit: -6,
-        equity: -6
+        edge: -6
       });
   });
 
@@ -32,7 +32,7 @@ describe('Base scenarios', () => {
         playerCards: [6, 7],
         dealerCards: [8, 9],
         profit: -6,
-        equity: -6
+        edge: -6
       });
   });
 
@@ -45,7 +45,7 @@ describe('Base scenarios', () => {
         playerCards: [6, 7],
         dealerCards: [8, 9],
         profit: -6,
-        equity: -6
+        edge: -6
       });
   });
 
@@ -58,7 +58,7 @@ describe('Base scenarios', () => {
         playerCards: [6, 7],
         dealerCards: [8, 9],
         profit: -6,
-        equity: -6
+        edge: -6
       });
   });
 
@@ -71,7 +71,7 @@ describe('Base scenarios', () => {
         playerCards: cnToInt(['3d', '3h']),
         dealerCards: cnToInt(['3s', '4c']),
         profit: -6,
-        equity: -6
+        edge: -6
       });
   });
 });
@@ -86,7 +86,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['As', 'Ks']),
         dealerCards: cnToInt(['9s', '8s']),
         profit: 505,
-        equity: 505
+        edge: 505
       });
   });
 
@@ -99,7 +99,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Ks', 'Qs']),
         dealerCards: cnToInt(['As', '2s']),
         profit: 55,
-        equity: 55
+        edge: 55
       });
   });
 
@@ -112,7 +112,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Jh', 'Jd']),
         dealerCards: cnToInt(['7d', '7c']),
         profit: 15,
-        equity: 15
+        edge: 15
       });
   });
 
@@ -125,7 +125,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Ah', '3d']),
         dealerCards: cnToInt(['9d', '9c']),
         profit: 8,
-        equity: 8
+        edge: 8
       });
   });
 
@@ -138,7 +138,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Kh', '9h']),
         dealerCards: cnToInt(['6s', '8h']),
         profit: 6.5,
-        equity: 6.5
+        edge: 6.5
       });
   });
 
@@ -151,7 +151,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['9c', 'Qd']),
         dealerCards: cnToInt(['Js', '2d']),
         profit: 6,
-        equity: 6
+        edge: 6
       });
   });
 
@@ -164,7 +164,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Ah', 'Qc']),
         dealerCards: cnToInt(['8d', 'Kc']),
         profit: 5,
-        equity: 5
+        edge: 5
       });
   });
 
@@ -177,7 +177,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Ah', 'Jc']),
         dealerCards: cnToInt(['Ac', '4h']),
         profit: 4,
-        equity: 4
+        edge: 4
       });
   });
 
@@ -190,7 +190,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Jh', 'Tc']),
         dealerCards: cnToInt(['8c', 'Th']),
         profit: 4,
-        equity: 4
+        edge: 4
       });
   });
 
@@ -203,7 +203,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['9s', '8s']),
         dealerCards: cnToInt(['As', 'Ks']),
         profit: -3,
-        equity: -3
+        edge: -3
       });
   });
 
@@ -216,7 +216,7 @@ describe('Blind payouts', () => {
         playerCards: cnToInt(['Qh', 'Ts']),
         dealerCards: cnToInt(['Qs', 'Th']),
         profit: 0,
-        equity: 0
+        edge: 0
       });
   });
 });
@@ -232,7 +232,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Ac', 'Ad']),
           dealerCards: cnToInt(['4c', '4d']),
           profit: 5,
-          equity: 5
+          edge: 5
         });
     });
 
@@ -245,7 +245,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Ac', '2c']),
           dealerCards: cnToInt(['9h', '4c']),
           profit: 6.5,
-          equity: 6.5
+          edge: 6.5
         });
     });
 
@@ -258,7 +258,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Ac', '2h']),
           dealerCards: cnToInt(['Jh', '4c']),
           profit: 5,
-          equity: 5
+          edge: 5
         });
     });
 
@@ -271,7 +271,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Kd', 'Ks']),
           dealerCards: cnToInt(['Qc', '5s']),
           profit: 5,
-          equity: 5
+          edge: 5
         });
     });
 
@@ -284,7 +284,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Kc', '5h']),
           dealerCards: cnToInt(['3d', '3h']),
           profit: -6,
-          equity: -6
+          edge: -6
         });
     });
 
@@ -297,7 +297,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Kc', '4h']),
           dealerCards: cnToInt(['3d', '3h']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
 
@@ -310,7 +310,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Kc', '2c']),
           dealerCards: cnToInt(['Jc', '4c']),
           profit: 5,
-          equity: 5
+          edge: 5
         });
     });
 
@@ -323,7 +323,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Qh', 'Qs']),
           dealerCards: cnToInt(['3h', '6d']),
           profit: 4,
-          equity: 4
+          edge: 4
         });
     });
 
@@ -336,7 +336,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Qh', '8c']),
           dealerCards: cnToInt(['Ts', '4d']),
           profit: -6,
-          equity: -6
+          edge: -6
         });
     });
 
@@ -349,7 +349,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Qh', '7c']),
           dealerCards: cnToInt(['Ts', '4d']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
 
@@ -362,7 +362,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Qh', '6h']),
           dealerCards: cnToInt(['4c', 'Ac']),
           profit: 4,
-          equity: 4
+          edge: 4
         });
     });
 
@@ -375,7 +375,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Qh', '5h']),
           dealerCards: cnToInt(['4c', 'Ac']),
           profit: 2,
-          equity: 2
+          edge: 2
         });
     });
 
@@ -388,7 +388,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Jh', 'Jc']),
           dealerCards: cnToInt(['Ac', '5d']),
           profit: 4,
-          equity: 4
+          edge: 4
         });
     });
 
@@ -401,7 +401,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Jh', 'Tc']),
           dealerCards: cnToInt(['Ac', 'Qs']),
           profit: -5,
-          equity: -5
+          edge: -5
         });
     });
 
@@ -414,7 +414,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Jh', '9c']),
           dealerCards: cnToInt(['Ac', 'Qs']),
           profit: 2,
-          equity: 2
+          edge: 2
         });
     });
 
@@ -427,7 +427,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Jd', '8d']),
           dealerCards: cnToInt(['9d', '2h']),
           profit: -6,
-          equity: -6
+          edge: -6
         });
     });
 
@@ -440,7 +440,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Jd', '7d']),
           dealerCards: cnToInt(['9d', '2h']),
           profit: -4,
-          equity: -4
+          edge: -4
         });
     });
 
@@ -453,7 +453,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['3s', '3d']),
           dealerCards: cnToInt(['Ks', 'Qs']),
           profit: 4,
-          equity: 4
+          edge: 4
         });
     });
 
@@ -466,7 +466,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2s', '2d']),
           dealerCards: cnToInt(['Ks', 'Qs']),
           profit: 1,
-          equity: 1
+          edge: 1
         });
     });
   });
@@ -481,7 +481,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2c', '2h']),
           dealerCards: cnToInt(['7s', '7h']),
           profit: -4,
-          equity: -4
+          edge: -4
         });
     });
 
@@ -494,7 +494,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2c', 'Qh']),
           dealerCards: cnToInt(['7s', '7h']),
           profit: 3,
-          equity: 3
+          edge: 3
         });
     });
 
@@ -507,7 +507,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Jh', '4d']),
           dealerCards: cnToInt(['9s', '9h']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
 
@@ -520,7 +520,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2c', '3h']),
           dealerCards: cnToInt(['6h', 'Ac']),
           profit: 2,
-          equity: 2
+          edge: 2
         });
     });
 
@@ -533,7 +533,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2c', '2h']),
           dealerCards: cnToInt(['6h', 'Ac']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
 
@@ -546,7 +546,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Td', '2d']),
           dealerCards: cnToInt(['Js', 'Ac']),
           profit: -4,
-          equity: -4
+          edge: -4
         });
     });
 
@@ -559,7 +559,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['9d', '2d']),
           dealerCards: cnToInt(['Js', 'Ac']),
           profit: 3.5,
-          equity: 3.5
+          edge: 3.5
         });
     });
 
@@ -572,7 +572,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Td', '2h']),
           dealerCards: cnToInt(['Js', 'Ac']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
   });
@@ -587,7 +587,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2c', '2h']),
           dealerCards: cnToInt(['6h', 'Ac']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
 
@@ -600,7 +600,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['6h', '5d']),
           dealerCards: cnToInt(['Tc', 'Ac']),
           profit: 1,
-          equity: 1
+          edge: 1
         });
     });
 
@@ -613,7 +613,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['2h', '3c']),
           dealerCards: cnToInt(['5h', 'Qd']),
           profit: -2,
-          equity: -2
+          edge: -2
         });
     });
 
@@ -626,7 +626,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Qh', '2d']),
           dealerCards: cnToInt(['3d', '4c']),
           profit: -3,
-          equity: -3
+          edge: -3
         });
     });
 
@@ -639,7 +639,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Kc', '2h']),
           dealerCards: cnToInt(['Qd', '9d']),
           profit: -2,
-          equity: -2
+          edge: -2
         });
     });
 
@@ -652,7 +652,7 @@ describe('Basic strategy', () => {
           playerCards: cnToInt(['Kc', '2h']),
           dealerCards: cnToInt(['Qd', '2d']),
           profit: -2,
-          equity: -2
+          edge: -2
         });
     });
   });

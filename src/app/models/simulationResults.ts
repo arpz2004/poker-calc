@@ -3,5 +3,5 @@ export interface SimulationResults {
   communityCards: number[],
   dealerCards: number[],
   profit: number,
-  equity: number
+  edge: number
 };

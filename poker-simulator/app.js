@@ -31,7 +31,7 @@ app.post("/api/runUthSimulations", (req, res, next) => {
       communityCards: data.communityCards,
       dealerCards: data.dealerCards,
       profit: data.profit,
-      equity: data.equity
+      edge: data.edge
     })
   );
 });

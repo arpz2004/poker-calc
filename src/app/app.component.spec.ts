@@ -12,7 +12,7 @@ describe('AppComponent', () => {
       communityCards: [],
       dealerCards: [],
       profit: 0,
-      equity: 0
+      edge: 0
     }))
     await TestBed.configureTestingModule({
       imports: [FormsModule, ReactiveFormsModule],
