@@ -642,6 +642,19 @@ describe('Basic strategy', () => {
           equity: -2
         });
     });
+
+    it('should give -2 profit post-river fold, dealer doesnt qualify', () => {
+      expect(binding.runUthSimulations(
+        cnToInt(['5c', '7h', '4d', '9s', '8d', 'Kc', '2h', 'Qd', '2d'])
+      ))
+        .toEqual({
+          communityCards: cnToInt(['5c', '7h', '4d', '9s', '8d']),
+          playerCards: cnToInt(['Kc', '2h']),
+          dealerCards: cnToInt(['Qd', '2d']),
+          profit: -2,
+          equity: -2
+        });
+    });
   });
 
 });

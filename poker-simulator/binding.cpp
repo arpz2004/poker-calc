@@ -248,7 +248,7 @@ float calculateProfitUTH(vector<int> deck)
   else if (playerHandRank < dealerHandRank || playBet == 0)
   {
     // Ante bet
-    if (dealerHandRank >> 12 > 1)
+    if (dealerHandRank >> 12 > 1 || playBet == 0)
     {
       profit -= 1;
     }
