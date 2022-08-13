@@ -195,7 +195,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
         (FiveCardLookup(postFlopHand) >> 12 == 2 && !((playerHand[0] - 1) / 4 == 0 && (playerHand[1] - 1) / 4 == 0) && isUnique(flopCardValues)) ||
         // Four to a flush including a hidden 10 or better
         ((sortedSuitValues[1] == sortedSuitValues[4] || sortedSuitValues[0] == sortedSuitValues[3]) &&
-         ((sortedSuitValues[2] == suitValues[0] && cardValues[0] >= 33) || (sortedSuitValues[2] == suitValues[1] && cardValues[1] >= 33))))
+         ((sortedSuitValues[2] == suitValues[0] && cardValues[0] >= 8) || (sortedSuitValues[2] == suitValues[1] && cardValues[1] >= 8))))
     {
       playBet = 2;
     }

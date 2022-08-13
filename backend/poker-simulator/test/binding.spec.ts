@@ -288,7 +288,7 @@ describe('Basic strategy', () => {
         });
     });
 
-    it('should give -4 profit K4o- 2x postflop loss, dealer qualifies, no blind pay', () => {
+    it('should give -4 profit K4o- 1x post-river loss, dealer qualifies, no blind pay', () => {
       expect(binding.runUthSimulations(
         cnToInt(['2d', 'Ac', '2s', '6c', '7d', 'Kc', '4h', '3d', '3h'])
       ))
@@ -296,8 +296,8 @@ describe('Basic strategy', () => {
           communityCards: cnToInt(['2d', 'Ac', '2s', '6c', '7d']),
           playerCards: cnToInt(['Kc', '4h']),
           dealerCards: cnToInt(['3d', '3h']),
-          profit: -4,
-          equity: -4
+          profit: -3,
+          equity: -3
         });
     });
 
@@ -513,10 +513,10 @@ describe('Basic strategy', () => {
 
     it('should give 2 profit hidden pair except pocket deuces 2x postflop win, dealer doesnt qualify, no blind pay', () => {
       expect(binding.runUthSimulations(
-        cnToInt(['7d', '2c', '5s', 'Ts', '8s', '2c', '3h', '6h', 'Ac'])
+        cnToInt(['7d', '2h', '5s', 'Ts', '8s', '2c', '3h', '6h', 'Ac'])
       ))
         .toEqual({
-          communityCards: cnToInt(['7d', '2c', '5s', 'Ts', '8s']),
+          communityCards: cnToInt(['7d', '2h', '5s', 'Ts', '8s']),
           playerCards: cnToInt(['2c', '3h']),
           dealerCards: cnToInt(['6h', 'Ac']),
           profit: 2,
