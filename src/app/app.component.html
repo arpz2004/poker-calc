@@ -41,9 +41,6 @@
       </div>
     </div>
   </form>
-  <div class="my-5">
-    [{{cardArray}}]
-  </div>
   <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-3">
     <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
     Calculate

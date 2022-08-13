@@ -19,7 +19,6 @@ export class AppComponent implements OnInit, OnDestroy {
   loading = false;
   complete: Subject<void> = new Subject();
   simulation?: SimulationResults;
-  cardArray: number[] = [];
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
@@ -40,13 +39,6 @@ export class AppComponent implements OnInit, OnDestroy {
         card1: this.createCardControl(''),
         card2: this.createCardControl('')
       })
-    });
-    this.cardForm.valueChanges.pipe(takeUntil(this.complete)).subscribe(val => {
-      const communityCards: string[] = Object.keys(val.community).map(key => val.community[key]);
-      const playerCards: string[] = Object.keys(val.player).map(key => val.player[key]);
-      const dealerCards: string[] = Object.keys(val.dealer).map(key => val.dealer[key]);
-      const cardStrings: string[] = communityCards.concat(playerCards, dealerCards);
-      this.cardArray = cardStrings.map(card => cardNotationToInt(card));
     });
   }
 
