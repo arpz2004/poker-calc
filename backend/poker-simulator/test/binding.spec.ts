@@ -92,11 +92,11 @@ describe('Blind payouts', () => {
 
   it('should give 50:1 on Straight Flush', () => {
     expect(binding.runUthSimulations(
-      cnToInt(['Qs', '6h', 'Ts', '4d', 'Js', '9s', '8s', 'As', '2s'])
+      cnToInt(['9s', '6h', 'Ts', '4d', 'Js', 'Ks', 'Qs', 'As', '2s'])
     ))
       .toEqual({
-        communityCards: cnToInt(['Qs', '6h', 'Ts', '4d', 'Js']),
-        playerCards: cnToInt(['9s', '8s']),
+        communityCards: cnToInt(['9s', '6h', 'Ts', '4d', 'Js']),
+        playerCards: cnToInt(['Ks', 'Qs']),
         dealerCards: cnToInt(['As', '2s']),
         profit: 55,
         equity: 55
@@ -150,8 +150,8 @@ describe('Blind payouts', () => {
         communityCards: cnToInt(['8s', 'Th', '6d', 'Jc', 'Kh']),
         playerCards: cnToInt(['9c', 'Qd']),
         dealerCards: cnToInt(['Js', '2d']),
-        profit: 6.5,
-        equity: 6.5
+        profit: 6,
+        equity: 6
       });
   });
 
@@ -176,8 +176,8 @@ describe('Blind payouts', () => {
         communityCards: cnToInt(['Js', '2s', '5s', '6h', 'Kh']),
         playerCards: cnToInt(['Ah', 'Jc']),
         dealerCards: cnToInt(['Ac', '4h']),
-        profit: 5,
-        equity: 5
+        profit: 4,
+        equity: 4
       });
   });
 
@@ -189,8 +189,8 @@ describe('Blind payouts', () => {
         communityCards: cnToInt(['3s', '4s', '9s', '5h', '6s']),
         playerCards: cnToInt(['Jh', 'Tc']),
         dealerCards: cnToInt(['8c', 'Th']),
-        profit: 5,
-        equity: 5
+        profit: 4,
+        equity: 4
       });
   });
 
@@ -296,8 +296,8 @@ describe('Basic strategy', () => {
           communityCards: cnToInt(['2d', 'Ac', '2s', '6c', '7d']),
           playerCards: cnToInt(['Kc', '4h']),
           dealerCards: cnToInt(['3d', '3h']),
-          profit: -6,
-          equity: -6
+          profit: -4,
+          equity: -4
         });
     });
 
@@ -361,8 +361,8 @@ describe('Basic strategy', () => {
           communityCards: cnToInt(['6c', '5s', '3h', 'Qd', 'Tc']),
           playerCards: cnToInt(['Qh', '6h']),
           dealerCards: cnToInt(['4c', 'Ac']),
-          profit: 2,
-          equity: 2
+          profit: 4,
+          equity: 4
         });
     });
 
@@ -374,8 +374,8 @@ describe('Basic strategy', () => {
           communityCards: cnToInt(['6c', '5s', '3h', 'Qd', 'Tc']),
           playerCards: cnToInt(['Qh', '5h']),
           dealerCards: cnToInt(['4c', 'Ac']),
-          profit: 4,
-          equity: 4
+          profit: 2,
+          equity: 2
         });
     });
 
@@ -547,6 +547,19 @@ describe('Basic strategy', () => {
           dealerCards: cnToInt(['Js', 'Ac']),
           profit: -4,
           equity: -4
+        });
+    });
+
+    it('should give -4 profit four to a flush including hidden 9 to flush 1x post-river win, dealer qualifies, no blind pay', () => {
+      expect(binding.runUthSimulations(
+        cnToInt(['Ah', '5d', 'Td', '5h', '6d', '9d', '2d', 'Js', 'Ac'])
+      ))
+        .toEqual({
+          communityCards: cnToInt(['Ah', '5d', 'Td', '5h', '6d']),
+          playerCards: cnToInt(['9d', '2d']),
+          dealerCards: cnToInt(['Js', 'Ac']),
+          profit: 3.5,
+          equity: 3.5
         });
     });
 
