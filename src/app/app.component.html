@@ -2,17 +2,17 @@
   <div>
     <form class="needs-validation" [formGroup]="simulationForm">
       <label class="form-label">Number of Simulations</label>
-      <input class="form-control" [class.is-invalid]="simulationForm?.get('numberOfSimulations').invalid" type="text"
+      <input class="form-control" [class.is-invalid]="simulationForm?.get('numberOfSimulations')?.invalid" type="text"
         formControlName="numberOfSimulations" />
       <div class="invalid-feedback">
-        <ng-container
-          *ngIf="simulationForm?.get('numberOfSimulations').errors && simulationForm?.get('numberOfSimulations').errors.max; else notMaxError">
+        <ng-container *ngIf="simulationForm?.get('numberOfSimulations')?.errors?.max; else notMaxError">
           Cannot exceed 1 billion
         </ng-container>
         <ng-template #notMaxError>Must be a number greater than 0</ng-template>
       </div>
     </form>
-    <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-2 w-100">
+    <button [disabled]="loading || simulationForm?.invalid" (click)="runUthSimulation()"
+      class="btn btn-primary mt-2 w-100">
       <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       Calculate
     </button>
