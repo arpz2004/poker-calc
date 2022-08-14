@@ -122,7 +122,7 @@ auto Map(const std::vector<T> &input_array, Func op)
   return result_array;
 }
 
-int getOuts(vector<int> hand, vector<int> communityCards)
+int getOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
 {
   vector<int> currentHand;
   currentHand.insert(currentHand.end(), hand.begin(), hand.end());
@@ -138,6 +138,10 @@ int getOuts(vector<int> hand, vector<int> communityCards)
       if (SixCardLookup(dealerHand) > LookupHand(currentHand))
       {
         dealerOuts++;
+        if (dealerOuts >= maxOuts)
+        {
+          break;
+        }
       }
     }
   }
@@ -190,7 +194,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
     // Postflop
     else if (
         // Two pair or better
-        FiveCardLookup(postFlopHand) >> 12 >= 3 ||
+        (FiveCardLookup(postFlopHand) >> 12 >= 3 && !(FiveCardLookup(postFlopHand) >> 12 == 4 && flopCardValues[0] == flopCardValues[1] && flopCardValues[0] == flopCardValues[2])) ||
         // Hidden pair except pocket deuces
         (FiveCardLookup(postFlopHand) >> 12 == 2 && !((playerHand[0] - 1) / 4 == 0 && (playerHand[1] - 1) / 4 == 0) && isUnique(flopCardValues)) ||
         // Four to a flush including a hidden 10 or better
@@ -205,7 +209,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
         LookupHand(postRiverHand) >> 12 >= 3 ||
         (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCardValues)) ||
         // Less than 21 dealer outs
-        getOuts(playerHand, communityCards) < 21)
+        getOuts(playerHand, communityCards, 21) < 21)
     {
       playBet = 1;
     }
@@ -264,7 +268,6 @@ Value RunUthSimulations(const CallbackInfo &info)
 {
   Array deckArray = info[0].As<Array>();
   int numberOfSimulations = info[1].ToNumber();
-  cout << "numberOfSimulations: " << numberOfSimulations;
   vector<int> deck;
 
   // Load the HandRanks.DAT file and map it into the HR array
