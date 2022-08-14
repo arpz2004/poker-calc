@@ -194,7 +194,9 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
     // Postflop
     else if (
         // Two pair or better
-        (FiveCardLookup(postFlopHand) >> 12 >= 3 && !(FiveCardLookup(postFlopHand) >> 12 == 4 && flopCardValues[0] == flopCardValues[1] && flopCardValues[0] == flopCardValues[2])) ||
+        (FiveCardLookup(postFlopHand) >> 12 >= 3 &&
+         // Not 3 of a kind with all 3 same flop card
+         !(FiveCardLookup(postFlopHand) >> 12 == 4 && flopCardValues[0] == flopCardValues[1] && flopCardValues[0] == flopCardValues[2])) ||
         // Hidden pair except pocket deuces
         (FiveCardLookup(postFlopHand) >> 12 == 2 && !((playerHand[0] - 1) / 4 == 0 && (playerHand[1] - 1) / 4 == 0) && isUnique(flopCardValues)) ||
         // Four to a flush including a hidden 10 or better
@@ -205,8 +207,13 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
     }
     // Post-river
     else if (
-        // Hidden pair or better
-        LookupHand(postRiverHand) >> 12 >= 3 ||
+        // Two pair or better
+        (LookupHand(postRiverHand) >> 12 >= 3 &&
+         // Not two pair with two pair on the board
+         !(LookupHand(postRiverHand) >> 12 == 3 && FiveCardLookup(communityCards) >> 12 == 3) &&
+         // Not three of a kind with three of a kind on the board
+         !(LookupHand(postRiverHand) >> 12 == 4 && FiveCardLookup(communityCards) >> 12 == 4)) ||
+         // Hidden pair
         (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCardValues)) ||
         // Less than 21 dealer outs
         getOuts(playerHand, communityCards, 21) < 21)
