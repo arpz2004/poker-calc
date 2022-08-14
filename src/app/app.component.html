@@ -1,20 +1,25 @@
 <div class="h-100 d-flex align-items-center justify-content-center">
   <div>
-    <form class="form" [formGroup]="simulationForm">
+    <form class="needs-validation" [formGroup]="simulationForm">
       <label class="form-label">Number of Simulations</label>
-      <input class="form-control" type="text" formControlName="numberOfSimulations" />
+      <input class="form-control" [class.is-invalid]="simulationForm?.get('numberOfSimulations').invalid" type="text"
+        formControlName="numberOfSimulations" />
+      <div class="invalid-feedback">
+        <ng-container
+          *ngIf="simulationForm?.get('numberOfSimulations').errors && simulationForm?.get('numberOfSimulations').errors.max; else notMaxError">
+          Cannot exceed 1 billion
+        </ng-container>
+        <ng-template #notMaxError>Must be a number greater than 0</ng-template>
+      </div>
     </form>
     <button [disabled]="loading" (click)="runUthSimulation()" class="btn btn-primary mt-2 w-100">
       <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       Calculate
     </button>
     <div class="row">
-      <div class="mt-2 col">
-        <div *ngIf="simulation; else noSimulation">Edge: {{ simulation.edge | percent:'1.2' }}</div>
-        <ng-template #noSimulation>
-          <div>Press Calculate</div>
-        </ng-template>
+      <div class="mt-2 col lh-base simulation">
+        <div *ngIf="simulation">Edge: {{ simulation.edge | percent:'1.2' }}</div>
       </div>
     </div>
-</div>
+  </div>
 </div>
