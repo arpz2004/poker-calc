@@ -19,21 +19,31 @@ app.use((req, res, next) => {
   next();
 });
 
-async function runUthSimulations(numberOfSimulations) {
-  const data = await binding.runUthSimulations([], numberOfSimulations);
+async function getSimulationStatus() {
+  const data = await binding.getSimulationStatus();
+  return data;
+}
+
+app.post("/api/getSimulationStatus", (req, res, next) => {
+  getSimulationStatus().then((data) =>
+    res.status(200).json({
+      currentSimulationNumber: data.currentSimulationNumber,
+      numberOfSimulations: data.numberOfSimulations
+    })
+  );
+});
+
+const uthSimulationResponse = (res) => (profit, edge, cards) => res.status(200).json({
+  profit, edge, ...cards
+});
+
+async function runUthSimulations(res, numberOfSimulations) {
+  const data = await binding.runUthSimulations([], numberOfSimulations, uthSimulationResponse(res));
   return data;
 }
 
 app.post("/api/runUthSimulations", (req, res, next) => {
-  runUthSimulations(req.body.numberOfSimulations).then((data) =>
-    res.status(200).json({
-      playerCards: data.playerCards,
-      communityCards: data.communityCards,
-      dealerCards: data.dealerCards,
-      profit: data.profit,
-      edge: data.edge
-    })
-  );
+  runUthSimulations(res, req.body.numberOfSimulations);
 });
 
 module.exports = app;
