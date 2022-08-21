@@ -38,12 +38,17 @@ export class AppComponent implements OnInit, OnDestroy {
       this.submitted = true;
       this.loading = true;
       this.simulation = undefined;
-      const simulationStatus$ = interval(200).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
+      const numberOfSimulations = this.simulationForm.get('numberOfSimulations')?.value;
+      this.simulationStatus = {
+        currentSimulationNumber: 0,
+        numberOfSimulations: numberOfSimulations
+      }
+      const simulationStatus$ = interval(1000).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
         this.pokerEvalService.getSimulationStatus().subscribe((simulationStatus) => {
           this.simulationStatus = simulationStatus;
         })
       });
-      this.pokerEvalService.runUthSimulations(this.simulationForm.get('numberOfSimulations')?.value).subscribe((simulationResults) => {
+      this.pokerEvalService.runUthSimulations(numberOfSimulations).subscribe((simulationResults) => {
         this.simulation = simulationResults;
         this.loading = false;
         simulationStatus$.unsubscribe();
