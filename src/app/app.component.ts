@@ -17,6 +17,8 @@ export class AppComponent implements OnInit, OnDestroy {
   simulation?: SimulationResults;
   simulationStatus?: SimulationStatus;
   simulationCompleted = new Subject<void>();
+  executionTime = 0;
+  executionTimeDisplay = '';
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
@@ -38,6 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.submitted = true;
       this.loading = true;
       this.simulation = undefined;
+      this.executionTimeDisplay = '';
       const numberOfSimulations = this.simulationForm.get('numberOfSimulations')?.value;
       this.simulationStatus = {
         currentSimulationNumber: 0,
@@ -48,8 +51,12 @@ export class AppComponent implements OnInit, OnDestroy {
           this.simulationStatus = simulationStatus;
         })
       });
+      const start = window.performance.now();
       this.pokerEvalService.runUthSimulations(numberOfSimulations).subscribe((simulationResults) => {
         this.simulation = simulationResults;
+        const end = window.performance.now();
+        this.executionTime = end - start;
+        this.convertExecutionTime();
         this.loading = false;
         simulationStatus$.unsubscribe();
       }, () => {
@@ -58,6 +65,40 @@ export class AppComponent implements OnInit, OnDestroy {
         simulationStatus$.unsubscribe();
       });
     }
+  }
+
+  convertExecutionTime() {
+    const diff = this.executionTime;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const arrival = new Date(+today + diff);
+    let maxTimeLengths = 2;
+    const duration = ['getFullYear', 'getMonth', 'getDate', 'getHours', 'getMinutes', 'getSeconds', 'getMilliseconds'].reduce((p, c) => {
+      const value = (arrival[c as keyof Date] as () => number)() - (today[c as keyof Date] as () => number)();
+      if (value && maxTimeLengths--) {
+        p += value;
+        let timeLength;
+        switch (c) {
+          case 'getFullYear':
+            timeLength = 'Years'
+            break;
+          case 'getDate':
+            timeLength = 'Days'
+            break;
+          case 'getMonth':
+            timeLength = 'Months'
+            break;
+          default:
+            timeLength = c.replace('get', '');
+        }
+        if (value === 1 && timeLength.endsWith('s')) {
+          timeLength = timeLength.slice(0, -1);
+        }
+        p += ' ' + timeLength + (c === 'getMilliseconds' ? '' : ' ')
+      }
+      return p;
+    }, '');
+    this.executionTimeDisplay = duration.trim();
   }
 
   ngOnDestroy() {

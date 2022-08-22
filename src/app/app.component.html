@@ -18,7 +18,10 @@
     </button>
     <div class="row">
       <div class="mt-2 col lh-base simulation">
-        <div *ngIf="simulation">Edge: {{ simulation.edge | percent:'1.2' }}</div>
+        <div *ngIf="simulation">
+          <div>Edge: {{ simulation.edge | percent:'1.2' }}</div>
+          <div *ngIf="executionTime" class="position-fixed">Calculated in {{ executionTimeDisplay }}.</div>
+        </div>
         <div *ngIf="simulationStatus && !simulation">{{(simulationStatus.currentSimulationNumber /
           simulationStatus.numberOfSimulations) | percent: '1.2'}} complete</div>
       </div>
