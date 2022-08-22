@@ -1,5 +1,6 @@
+import { CurrencyPipe } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { interval, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SimulationResults, SimulationStatus } from './models/simulationResults';
@@ -25,12 +26,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.simulationForm = this.fb.group({
       numberOfSimulations: [
-        '100000000',
-        [
-          Validators.min(1),
-          Validators.max(1000000000),
-          Validators.pattern('^[0-9]*[1-9][0-9]*$')
-        ]
+        '100,000,000'
       ]
     });
   }
@@ -41,7 +37,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.simulation = undefined;
       this.executionTimeDisplay = '';
-      const numberOfSimulations = this.simulationForm.get('numberOfSimulations')?.value;
+      const numberOfSimulations = this.simulationForm.get('numberOfSimulations')?.value?.replace(',', '');
       this.simulationStatus = {
         currentSimulationNumber: 0,
         numberOfSimulations: numberOfSimulations
@@ -99,6 +95,19 @@ export class AppComponent implements OnInit, OnDestroy {
       return p;
     }, '');
     this.executionTimeDisplay = duration.trim();
+  }
+
+  onNumberOfSimulationsChange(value: string) {
+    const ctrl = this.simulationForm.get('numberOfSimulations') as FormControl;
+    let removedNonNumbers = value.replace(/\D/g, '');
+    if (+removedNonNumbers > Math.pow(10, 9)) {
+      removedNonNumbers = '' + Math.pow(10, 9);
+    }
+    if (+removedNonNumbers === 0) {
+      ctrl.setValue('', { emitEvent: false, emitViewToModelChange: false });
+    } else {
+      ctrl.setValue((+removedNonNumbers).toLocaleString(), { emitEvent: false, emitViewToModelChange: false });
+    }
   }
 
   ngOnDestroy() {
