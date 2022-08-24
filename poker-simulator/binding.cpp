@@ -81,7 +81,7 @@ double getBlindBetPayTable(int handRank)
     multiplier = 1;
     break;
   case 6:
-    multiplier = 1.5f;
+    multiplier = 1.5;
     break;
   case 7:
     multiplier = 3;
