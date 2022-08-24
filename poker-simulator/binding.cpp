@@ -71,16 +71,9 @@ int SixCardLookup(vector<int> cards)
   return HR[p];
 }
 
-struct c_unique
+double getBlindBetPayTable(int handRank)
 {
-  int current;
-  c_unique() { current = 0; }
-  int operator()() { return ++current; }
-} UniqueNumber;
-
-float getBlindBetPayTable(int handRank)
-{
-  float multiplier = 0;
+  double multiplier = 0;
   int handType = handRank >> 12;
   switch (handType)
   {
@@ -226,7 +219,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
   return playBet;
 }
 
-float calculateProfitUTH(vector<int> deck)
+double calculateProfitUTH(vector<int> deck)
 {
   vector<int> communityCards;
   communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
@@ -243,7 +236,7 @@ float calculateProfitUTH(vector<int> deck)
   vector<int> knownFlopCards;
   vector<int> knownDealerCards;
   int playBet = getPlayBet(playerCards, communityCards, knownFlopCards, knownDealerCards);
-  float profit = 0;
+  double profit = 0;
   int playerHandRank = LookupHand(playerHand);
   int dealerHandRank = LookupHand(dealerHand);
   if (playerHandRank > dealerHandRank && playBet > 0)
@@ -277,8 +270,8 @@ struct result
   vector<int> playerCards;
   vector<int> communityCards;
   vector<int> dealerCards;
-  float profit;
-  float edge;
+  double profit;
+  double edge;
 };
 result runUthSimulations(vector<int> deck, int sims)
 {
@@ -290,7 +283,7 @@ result runUthSimulations(vector<int> deck, int sims)
     return result{{}, {}, {}, 0, 0};
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   std::fclose(fin);
-  float profit = 0;
+  double profit = 0;
   if (deck.size() > 0)
   {
     numberOfSimulations = 1;
@@ -313,7 +306,7 @@ result runUthSimulations(vector<int> deck, int sims)
       profit += calculateProfitUTH(deck);
     }
   }
-  float edge = profit / (float)numberOfSimulations;
+  double edge = profit / (double)numberOfSimulations;
   vector<int> communityCards;
   communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
   vector<int> playerCards;
@@ -405,8 +398,8 @@ private:
   vector<int> dealerCards;
   vector<int> communityCards;
   int numberOfSimulations;
-  float profit;
-  float edge;
+  double profit;
+  double edge;
 };
 
 // Asynchronous access to the `Estimate()` function
