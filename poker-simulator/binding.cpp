@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cstring>
 #include <iterator>
-#include <numeric>
 #include <vector>
 #include <algorithm>
 #include <random>
@@ -291,34 +290,41 @@ result runUthSimulations(vector<int> deck, int sims)
   }
   else
   {
-    for (int i = 0; i < numberOfSimulations; i++)
+#pragma omp parallel
     {
-      currentSimulationNumber = i + 1;
-      deck = {1, 2, 3, 4, 5, 6, 7, 8,
-              9, 10, 11, 12, 13, 14, 15,
-              16, 17, 18, 19, 20, 21, 22,
-              23, 24, 25, 26, 27, 28, 29,
-              30, 31, 32, 33, 34, 35, 36,
-              37, 38, 39, 40, 41, 42, 43,
-              44, 45, 46, 47, 48, 49, 50,
-              51, 52};
-      std::shuffle(std::begin(deck), std::end(deck), rng);
-      profit += calculateProfitUTH(deck);
+#pragma omp for schedule(dynamic) nowait
+      for (int i = 0; i < numberOfSimulations; i++)
+      {
+        currentSimulationNumber = i + 1;
+        vector<int> newDeck = {1, 2, 3, 4, 5, 6, 7, 8,
+                               9, 10, 11, 12, 13, 14, 15,
+                               16, 17, 18, 19, 20, 21, 22,
+                               23, 24, 25, 26, 27, 28, 29,
+                               30, 31, 32, 33, 34, 35, 36,
+                               37, 38, 39, 40, 41, 42, 43,
+                               44, 45, 46, 47, 48, 49, 50,
+                               51, 52};
+        std::shuffle(std::begin(newDeck), std::end(newDeck), rng);
+        profit += calculateProfitUTH(newDeck);
+      }
     }
   }
   double edge = profit / (double)numberOfSimulations;
   vector<int> communityCards;
-  communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
   vector<int> playerCards;
-  playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
   vector<int> dealerCards;
-  dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
   vector<int> playerHand;
-  playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
-  playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
   vector<int> dealerHand;
-  dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
-  dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+  if (deck.size())
+  {
+    communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
+    playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
+    dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
+    playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
+    playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
+    dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
+    dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+  }
   return result{
       playerCards,
       communityCards,
