@@ -112,7 +112,7 @@ auto Map(const std::vector<T> &input_array, Func op)
   return result_array;
 }
 
-int getOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
+int getBadOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
 {
   vector<int> currentHand;
   currentHand.insert(currentHand.end(), hand.begin(), hand.end());
@@ -138,46 +138,114 @@ int getOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
   return dealerOuts;
 }
 
-int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> knownFlopCards, vector<int> knownDealerCards)
+int getBadOutsFlop(vector<int> hand, vector<int> flop, vector<int> knownDealerCards, int maxOuts)
+{
+  vector<int> currentHand;
+  currentHand.insert(currentHand.end(), hand.begin(), hand.end());
+  currentHand.insert(currentHand.end(), flop.begin(), flop.end());
+  int dealerOuts = 0;
+  for (int i = 1; i <= 52; i++)
+  {
+    if (!(find(currentHand.begin(), currentHand.end(), i) != currentHand.end() || find(knownDealerCards.begin(), knownDealerCards.end(), i) != knownDealerCards.end()))
+    {
+      vector<int> dealerHand;
+      dealerHand.insert(dealerHand.end(), flop.begin(), flop.end());
+      dealerHand.insert(dealerHand.end(), knownDealerCards.begin(), knownDealerCards.end());
+      dealerHand.insert(dealerHand.end(), i);
+      if (dealerHand.size() == 6)
+      {
+        currentHand.insert(currentHand.end(), i);
+      }
+      if ((dealerHand.size() == 5 && FiveCardLookup(dealerHand) > FiveCardLookup(currentHand)) ||
+          (dealerHand.size() == 6 && SixCardLookup(dealerHand) > SixCardLookup(currentHand)))
+      {
+        dealerOuts++;
+        if (dealerOuts >= maxOuts)
+        {
+          break;
+        }
+      }
+    }
+  }
+  return dealerOuts;
+}
+
+int getGoodOuts(vector<int> hand, vector<int> communityCards, int knownDealerCard, int maxOuts, bool push = false)
+{
+  vector<int> currentHand;
+  currentHand.insert(currentHand.end(), hand.begin(), hand.end());
+  currentHand.insert(currentHand.end(), communityCards.begin(), communityCards.end());
+  int goodOuts = 0;
+  for (int i = 1; i <= 52; i++)
+  {
+    if (!(find(currentHand.begin(), currentHand.end(), i) != currentHand.end() || knownDealerCard == i))
+    {
+      vector<int> dealerHand;
+      dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
+      dealerHand.insert(dealerHand.end(), knownDealerCard);
+      dealerHand.insert(dealerHand.end(), i);
+      if (LookupHand(currentHand) > LookupHand(dealerHand))
+      {
+        goodOuts++;
+      }
+      else if (push && LookupHand(currentHand) == LookupHand(dealerHand))
+      {
+        goodOuts++;
+      }
+      if (goodOuts >= maxOuts)
+      {
+        break;
+      }
+    }
+  }
+  return goodOuts;
+}
+
+int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> dealerCards, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
   int playBet = 0;
-  // Basic Strategy
-  if (knownFlopCards.size() == 0 && knownDealerCards.size() == 0)
-  {
-    vector<int> flop;
-    flop.insert(flop.end(), communityCards.begin(), communityCards.end() - 2);
-    vector<int> postFlopHand;
-    postFlopHand.insert(postFlopHand.end(), playerHand.begin(), playerHand.end());
-    postFlopHand.insert(postFlopHand.end(), flop.begin(), flop.end());
-    vector<int> postRiverHand;
-    postRiverHand.insert(postRiverHand.end(), playerHand.begin(), playerHand.end());
-    postRiverHand.insert(postRiverHand.end(), communityCards.begin(), communityCards.end());
-    vector<int> cardValues = Map(postFlopHand, [](int value)
-                                 { return (value - 1) / 4; });
-    vector<int> suitValues = Map(postFlopHand, [](int value)
-                                 { return value % 4; });
-    vector<int> flopCardValues = Map(flop, [](int value)
+  vector<int> flop;
+  flop.insert(flop.end(), communityCards.begin(), communityCards.end() - 2);
+  vector<int> postFlopHand;
+  postFlopHand.insert(postFlopHand.end(), playerHand.begin(), playerHand.end());
+  postFlopHand.insert(postFlopHand.end(), flop.begin(), flop.end());
+  vector<int> postRiverHand;
+  postRiverHand.insert(postRiverHand.end(), playerHand.begin(), playerHand.end());
+  postRiverHand.insert(postRiverHand.end(), communityCards.begin(), communityCards.end());
+  vector<int> playerCardValues = Map(playerHand, [](int value)
                                      { return (value - 1) / 4; });
-    vector<int> communityCardValues = Map(communityCards, [](int value)
-                                          { return (value - 1) / 4; });
-    vector<int> sortedSuitValues;
-    sortedSuitValues.insert(sortedSuitValues.end(), suitValues.begin(), suitValues.end());
-    sort(sortedSuitValues.begin(), sortedSuitValues.end());
+  vector<int> playerSuitValues = Map(playerHand, [](int value)
+                                     { return value % 4; });
+  vector<int> flopSuitValues = Map(flop, [](int value)
+                                   { return value % 4; });
+  vector<int> flopCardValues = Map(flop, [](int value)
+                                   { return (value - 1) / 4; });
+  vector<int> communityCardValues = Map(communityCards, [](int value)
+                                        { return (value - 1) / 4; });
+  vector<int> dealerCardValues = Map(dealerCards, [](int value)
+                                     { return (value - 1) / 4; });
+  vector<int> sortedSuitValues;
+  sortedSuitValues.insert(sortedSuitValues.end(), playerSuitValues.begin(), playerSuitValues.end());
+  sortedSuitValues.insert(sortedSuitValues.end(), flopSuitValues.begin(), flopSuitValues.end());
+  sort(sortedSuitValues.begin(), sortedSuitValues.end());
+  // Basic Strategy
+  if (knownDealerCards == 0 && knownFlopCards == 0 && knownTurnRiverCards == 0)
+  {
     // Preflop
     if (
         // Ax
-        playerHand[0] >= 49 || playerHand[1] >= 49 ||
+        playerCardValues[0] >= 12 || playerCardValues[1] >= 12 ||
         // K2s+, K5+
-        (playerHand[0] >= 45 && (playerHand[1] >= 13 || (playerHand[0] - playerHand[1]) % 4 == 0)) ||
-        (playerHand[1] >= 45 && (playerHand[0] >= 13 || (playerHand[1] - playerHand[0]) % 4 == 0)) ||
+        (playerCardValues[0] >= 11 && (playerCardValues[1] >= 3 || (playerHand[0] - playerHand[1]) % 4 == 0)) ||
+        (playerCardValues[1] >= 11 && (playerCardValues[0] >= 3 || (playerHand[1] - playerHand[0]) % 4 == 0)) ||
         // Q6s+, Q8+
-        (playerHand[0] >= 41 && (playerHand[1] >= 25 || (playerHand[1] >= 17 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
-        (playerHand[1] >= 41 && (playerHand[0] >= 25 || (playerHand[0] >= 17 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
+        (playerCardValues[0] >= 10 && (playerCardValues[1] >= 6 || (playerCardValues[1] >= 4 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
+        (playerCardValues[1] >= 10 && (playerCardValues[0] >= 6 || (playerCardValues[0] >= 4 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
         // J8s+, JT+
-        (playerHand[0] >= 37 && (playerHand[1] >= 33 || (playerHand[1] >= 25 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
-        (playerHand[1] >= 37 && (playerHand[0] >= 33 || (playerHand[0] >= 25 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
+        (playerCardValues[0] >= 9 && (playerCardValues[1] >= 8 || (playerCardValues[1] >= 6 && (playerHand[0] - playerHand[1]) % 4 == 0))) ||
+        (playerCardValues[1] >= 9 && (playerCardValues[0] >= 8 || (playerCardValues[0] >= 6 && (playerHand[1] - playerHand[0]) % 4 == 0))) ||
         // 33+
-        ((playerHand[0] - 1) / 4 == (playerHand[1] - 1) / 4 && playerHand[0] >= 5))
+        (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 1))
     {
       playBet = 4;
     }
@@ -188,10 +256,10 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
          // Not 3 of a kind with all 3 same flop card
          !(FiveCardLookup(postFlopHand) >> 12 == 4 && flopCardValues[0] == flopCardValues[1] && flopCardValues[0] == flopCardValues[2])) ||
         // Hidden pair except pocket deuces
-        (FiveCardLookup(postFlopHand) >> 12 == 2 && !((playerHand[0] - 1) / 4 == 0 && (playerHand[1] - 1) / 4 == 0) && isUnique(flopCardValues)) ||
+        (FiveCardLookup(postFlopHand) >> 12 == 2 && !(playerCardValues[0] == 0 && playerCardValues[1] == 0) && isUnique(flopCardValues)) ||
         // Four to a flush including a hidden 10 or better
         ((sortedSuitValues[1] == sortedSuitValues[4] || sortedSuitValues[0] == sortedSuitValues[3]) &&
-         ((sortedSuitValues[2] == suitValues[0] && cardValues[0] >= 8) || (sortedSuitValues[2] == suitValues[1] && cardValues[1] >= 8))))
+         ((sortedSuitValues[2] == playerSuitValues[0] && playerCardValues[0] >= 8) || (sortedSuitValues[2] == playerSuitValues[1] && playerCardValues[1] >= 8))))
     {
       playBet = 2;
     }
@@ -206,7 +274,47 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
         // Hidden pair
         (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCardValues)) ||
         // Less than 21 dealer outs
-        getOuts(playerHand, communityCards, 21) < 21)
+        getBadOuts(playerHand, communityCards, 21) < 21)
+    {
+      playBet = 1;
+    }
+  }
+  // 1 known flop card and 1 known dealer card
+  else if (knownDealerCards == 1 && knownFlopCards == 1 && knownTurnRiverCards == 0)
+  {
+    // Preflop
+    if (
+        // Dealer card or better and ten or better
+        ((playerCardValues[0] >= dealerCardValues[0] && playerCardValues[1] >= 8) || (playerCardValues[1] >= dealerCardValues[0] && playerCardValues[0] >= 8)) ||
+        // Pair of dealer cards or better, if pair equal to dealer card, other card 10 or better
+        (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] == flopCardValues[0]) ||
+        (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= dealerCardValues[0]) ||
+        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] == dealerCardValues[0] && playerCardValues[1] >= 8) ||
+        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] == dealerCardValues[0] && playerCardValues[0] >= 8) ||
+        // Pair of 7s or better
+        (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[0])) ||
+        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[0])) ||
+        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[1])) ||
+        // Any pair with flop card, better than dealer card
+        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] > dealerCardValues[0]) || (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] > dealerCardValues[0]) ||
+        // Three to a flush including a hidden J or better
+        (playerSuitValues[0] == playerSuitValues[1] && playerSuitValues[0] == flopSuitValues[0] && (playerCardValues[0] >= 9 || playerCardValues[1] >= 9)))
+    {
+      playBet = 4;
+    }
+    // Postflop
+    else if (
+        // Less than 12 bad outs and we are ahead
+        getBadOutsFlop(playerHand, flop, {dealerCards.begin(), dealerCards.begin() + 1}, 12) < 12)
+    {
+      playBet = 2;
+    }
+    // Post-river
+    else if (
+        // At least 10 good outs
+        getGoodOuts(playerHand, communityCards, dealerCards[0], 10) >= 10 ||
+        // At least 15 good outs if best case is push
+        getGoodOuts(playerHand, communityCards, dealerCards[0], 15, true) >= 15)
     {
       playBet = 1;
     }
@@ -214,7 +322,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> k
   return playBet;
 }
 
-double calculateProfitUTH(vector<int> deck)
+double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
   vector<int> communityCards;
   communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
@@ -228,9 +336,7 @@ double calculateProfitUTH(vector<int> deck)
   vector<int> dealerHand;
   dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
   dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
-  vector<int> knownFlopCards;
-  vector<int> knownDealerCards;
-  int playBet = getPlayBet(playerCards, communityCards, knownFlopCards, knownDealerCards);
+  int playBet = getPlayBet(playerCards, communityCards, dealerCards, knownDealerCards, knownFlopCards, knownTurnRiverCards);
   double profit = 0;
   int playerHandRank = LookupHand(playerHand);
   int dealerHandRank = LookupHand(dealerHand);
@@ -268,7 +374,7 @@ struct result
   double profit;
   double edge;
 };
-result runUthSimulations(vector<int> deck, int sims)
+result runUthSimulations(vector<int> deck, int sims, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
   numberOfSimulations = sims;
   // Load the HandRanks.DAT file and map it into the HR array
@@ -282,7 +388,7 @@ result runUthSimulations(vector<int> deck, int sims)
   if (deck.size() > 0)
   {
     numberOfSimulations = 1;
-    profit += calculateProfitUTH(deck);
+    profit += calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
   }
   else
   {
@@ -301,7 +407,7 @@ result runUthSimulations(vector<int> deck, int sims)
                                44, 45, 46, 47, 48, 49, 50,
                                51, 52};
         std::shuffle(std::begin(newDeck), std::end(newDeck), rng);
-        profit += calculateProfitUTH(newDeck);
+        profit += calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
       }
     }
   }
@@ -343,8 +449,9 @@ Value GetSimulationStatus(const CallbackInfo &info)
 class SimulationWorker : public Napi::AsyncWorker
 {
 public:
-  SimulationWorker(Napi::Function &callback, vector<int> deck, int numberOfSimulations)
-      : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), profit(0), edge(0) {}
+  SimulationWorker(Napi::Function &callback, vector<int> deck, int numberOfSimulations, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+      : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), knownDealerCards(knownDealerCards),
+        knownFlopCards(knownFlopCards), knownTurnRiverCards(knownTurnRiverCards), profit(0), edge(0) {}
   ~SimulationWorker() {}
 
   // Executed inside the worker-thread.
@@ -353,7 +460,7 @@ public:
   // should go on `this`.
   void Execute()
   {
-    result simResults = runUthSimulations(deck, numberOfSimulations);
+    result simResults = runUthSimulations(deck, numberOfSimulations, knownDealerCards, knownFlopCards, knownTurnRiverCards);
     profit = simResults.profit;
     edge = simResults.edge;
     playerCards = simResults.playerCards;
@@ -400,6 +507,9 @@ private:
   vector<int> dealerCards;
   vector<int> communityCards;
   int numberOfSimulations;
+  int knownDealerCards;
+  int knownFlopCards;
+  int knownTurnRiverCards;
   double profit;
   double edge;
 };
@@ -409,8 +519,11 @@ Napi::Value RunUthSimulations(const Napi::CallbackInfo &info)
 {
   Array deckArray = info[0].As<Array>();
   numberOfSimulations = info[1].ToNumber();
+  int knownDealerCards = info[2].ToNumber();
+  int knownFlopCards = info[3].ToNumber();
+  int knownTurnRiverCards = info[4].ToNumber();
   vector<int> deck;
-  Napi::Function callback = info[2].As<Napi::Function>();
+  Napi::Function callback = info[5].As<Napi::Function>();
   if (deckArray.Length() > 0)
   {
     for (size_t i = 0; i < deckArray.Length(); i++)
@@ -419,7 +532,7 @@ Napi::Value RunUthSimulations(const Napi::CallbackInfo &info)
       deck.push_back(value);
     }
   }
-  SimulationWorker *piWorker = new SimulationWorker(callback, deck, numberOfSimulations);
+  SimulationWorker *piWorker = new SimulationWorker(callback, deck, numberOfSimulations, knownDealerCards, knownFlopCards, knownTurnRiverCards);
   piWorker->Queue();
   return info.Env().Undefined();
 }

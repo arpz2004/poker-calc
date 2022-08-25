@@ -38,7 +38,7 @@ const uthSimulationResponse = (res) => (profit, edge, cards) => res.status(200).
 });
 
 async function runUthSimulations(res, numberOfSimulations) {
-  const data = await binding.runUthSimulations([], numberOfSimulations, uthSimulationResponse(res));
+  const data = await binding.runUthSimulations([], numberOfSimulations, 1, 1, 0, uthSimulationResponse(res));
   return data;
 }
 
