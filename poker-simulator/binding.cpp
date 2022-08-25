@@ -1,9 +1,5 @@
 #include <napi.h>
 #include <iostream>
-#include <cstring>
-#include <iterator>
-#include <vector>
-#include <algorithm>
 #include <random>
 #include "omp.h"
 
