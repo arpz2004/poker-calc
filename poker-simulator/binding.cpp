@@ -267,15 +267,16 @@ struct result
   vector<int> dealerCards;
   double profit;
   double edge;
+  string error;
 };
-result runUthSimulations(vector<int> deck, int sims)
+auto runUthSimulations(vector<int> deck, int sims)
 {
   numberOfSimulations = sims;
   // Load the HandRanks.DAT file and map it into the HR array
   memset(HR, 0, sizeof(HR));
   FILE *fin = fopen("HandRanks.dat", "rb");
   if (!fin)
-    return result{{}, {}, {}, 0, 0};
+    return result{{}, {}, {}, 0, 0, "HandRanks.dat not found"};
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   std::fclose(fin);
   double profit = 0;
@@ -344,7 +345,7 @@ class SimulationWorker : public Napi::AsyncWorker
 {
 public:
   SimulationWorker(Napi::Function &callback, vector<int> deck, int numberOfSimulations)
-      : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), profit(0), edge(0) {}
+      : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), profit(0), edge(0), error("") {}
   ~SimulationWorker() {}
 
   // Executed inside the worker-thread.
@@ -359,6 +360,7 @@ public:
     playerCards = simResults.playerCards;
     communityCards = simResults.communityCards;
     dealerCards = simResults.dealerCards;
+    error = simResults.error;
   }
 
   // Executed when the async work is complete
@@ -391,7 +393,8 @@ public:
     obj.Set("dealerCards", dealerCardsArr);
     Callback().Call({Napi::Number::New(Env(), profit),
                      Napi::Number::New(Env(), edge),
-                     obj});
+                     obj,
+                     Napi::String::New(Env(), error)});
   }
 
 private:
@@ -402,6 +405,7 @@ private:
   int numberOfSimulations;
   double profit;
   double edge;
+  string error;
 };
 
 // Asynchronous access to the `Estimate()` function

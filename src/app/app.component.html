@@ -18,7 +18,7 @@
         </div>
         <div *ngIf="simulationStatus && !simulation">{{(simulationStatus.currentSimulationNumber /
           simulationStatus.numberOfSimulations) | percent: '1.2'}} complete</div>
-        <div *ngIf="error">Server Error</div>
+        <div *ngIf="errorMessage">{{errorMessage}}</div>
       </div>
     </div>
   </div>
