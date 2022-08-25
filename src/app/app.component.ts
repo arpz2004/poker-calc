@@ -20,7 +20,7 @@ export class AppComponent implements OnInit, OnDestroy {
   simulationCompleted = new Subject<void>();
   executionTime = 0;
   executionTimeDisplay = '';
-  error = false;
+  errorMessage = '';
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
@@ -36,7 +36,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.simulationForm.valid) {
       this.submitted = true;
       this.loading = true;
-      this.error = false;
+      this.errorMessage = '';
       this.simulation = undefined;
       this.executionTimeDisplay = '';
       const numberOfSimulations = +this.simulationForm.get('numberOfSimulations')?.value?.replaceAll(',', '');
@@ -57,11 +57,11 @@ export class AppComponent implements OnInit, OnDestroy {
         this.convertExecutionTime();
         this.loading = false;
         simulationStatus$.unsubscribe();
-      }, () => {
+      }, (errorResp) => {
         this.simulationStatus = undefined;
         this.submitted = false;
         this.loading = false;
-        this.error = true;
+        this.errorMessage = errorResp && errorResp.error && errorResp.error.message || 'Server Error';
         simulationStatus$.unsubscribe();
       });
     }

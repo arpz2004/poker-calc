@@ -25,17 +25,23 @@ async function getSimulationStatus() {
 }
 
 app.post("/api/getSimulationStatus", (req, res, next) => {
-  getSimulationStatus().then((data) =>
+  getSimulationStatus().then((data) => {
     res.status(200).json({
       currentSimulationNumber: data.currentSimulationNumber,
       numberOfSimulations: data.numberOfSimulations
-    })
-  );
+    });
+  });
 });
 
-const uthSimulationResponse = (res) => (profit, edge, cards) => res.status(200).json({
-  profit, edge, ...cards
-});
+const uthSimulationResponse = (res) => (profit, edge, cards, error) => {
+  if (error) {
+    res.status(500).json({ message: error });
+  } else {
+    res.status(200).json({
+      profit, edge, ...cards
+    });
+  }
+}
 
 async function runUthSimulations(res, numberOfSimulations) {
   const data = await binding.runUthSimulations([], numberOfSimulations, 1, 1, 0, uthSimulationResponse(res));
