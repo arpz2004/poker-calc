@@ -8,10 +8,10 @@
 #include <random>
 #include "omp.h"
 
-#define DWORD int32_t
-
 using namespace Napi;
 using namespace std;
+
+#define DWORD int32_t
 
 const int ROYAL_FLUSH = 36874;
 

@@ -19,7 +19,7 @@
     'msvs_settings': {
       'VCCLCompilerTool': {
         'ExceptionHandling': 1,
-        'AdditionalOptions' : ['/openmp']
+        'AdditionalOptions' : ['/openmp', '/O2']
       },
     },
       "defines": ["NAPI_DISABLE_CPP_EXCEPTIONS"]
