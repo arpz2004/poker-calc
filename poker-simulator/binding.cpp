@@ -286,15 +286,13 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     if (
         // Dealer card or better and ten or better
         ((playerCardValues[0] >= dealerCardValues[0] && playerCardValues[1] >= 8) || (playerCardValues[1] >= dealerCardValues[0] && playerCardValues[0] >= 8)) ||
-        // Pair of dealer cards or better, if pair equal to dealer card, other card 10 or better
+        // Pair of dealer cards or better
         (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] == flopCardValues[0]) ||
         (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= dealerCardValues[0]) ||
-        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] == dealerCardValues[0] && playerCardValues[1] >= 8) ||
-        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] == dealerCardValues[0] && playerCardValues[0] >= 8) ||
         // Pair of 7s or better
         (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[0])) ||
-        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[0])) ||
-        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[1])) ||
+        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] >= 5) ||
+        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] >= 5) ||
         // Any pair with flop card, better than dealer card
         (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] > dealerCardValues[0]) || (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] > dealerCardValues[0]) ||
         // Three to a flush including a hidden J or better
