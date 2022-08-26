@@ -1132,7 +1132,7 @@ fdescribe('One flop card and one dealer card known', () => {
   describe('Postflop 2x rules', () => {
     it('should give 3 profit less than 12 bad outs 2x postflop win, dealer qualifies, no blind pay', (done) => {
       binding.runUthSimulations(
-        cnToInt([]), 0, 1, 1, 0,
+        cnToInt(['4c', '5c', '6c', '2c', '2s', '6d', '9h', '7h', '4d']), 0, 1, 1, 0,
         (profit, edge, cards) => {
           expect({ profit, edge, ...cards }).toEqual({
             communityCards: cnToInt(['4c', '5c', '6c', '2c', '2s']),
@@ -1182,11 +1182,11 @@ fdescribe('One flop card and one dealer card known', () => {
 
     it('should give -2 profit less than 10 good outs post-river fold, dealer doesnt qualify, no blind pay', (done) => {
       binding.runUthSimulations(
-        cnToInt(['Jc', '6s', '3c', 'Qh', '7c', '9c', 'Th', '2c', '9d']), 0, 1, 1, 0,
+        cnToInt(['Jc', 'As', '3c', 'Qh', '7c', '8c', '9h', '2c', '9d']), 0, 1, 1, 0,
         (profit, edge, cards) => {
           expect({ profit, edge, ...cards }).toEqual({
-            communityCards: cnToInt(['Jc', '6s', '3c', 'Qh', '7c']),
-            playerCards: cnToInt(['9c', 'Th']),
+            communityCards: cnToInt(['Jc', 'As', '3c', 'Qh', '7c']),
+            playerCards: cnToInt(['8c', '9h']),
             dealerCards: cnToInt(['2c', '9d']),
             profit: -2,
             edge: -2
@@ -1212,7 +1212,7 @@ fdescribe('One flop card and one dealer card known', () => {
       );
     });
 
-    it('should give -2 profit less than 15 good outs if best case is push post-river fold, dealer qualifies, no blind pay', (done) => {
+    it('should give -3 profit less than 15 good outs if best case is push post-river fold, dealer qualifies, no blind pay', (done) => {
       binding.runUthSimulations(
         cnToInt(['Ac', 'Ad', 'Qd', 'Qc', '6c', '5h', '6h', '5d', '8s']), 0, 1, 1, 0,
         (profit, edge, cards) => {
@@ -1220,8 +1220,8 @@ fdescribe('One flop card and one dealer card known', () => {
             communityCards: cnToInt(['Ac', 'Ad', 'Qd', 'Qc', '6c']),
             playerCards: cnToInt(['5h', '6h']),
             dealerCards: cnToInt(['5d', '8s']),
-            profit: -2,
-            edge: -2
+            profit: -3,
+            edge: -3
           });
           done();
         }
