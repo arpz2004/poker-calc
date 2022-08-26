@@ -901,7 +901,7 @@ describe('Basic strategy', () => {
 
 });
 
-fdescribe('One flop card and one dealer card known', () => {
+describe('One flop card and one dealer card known', () => {
   describe('Preflop 4x rules', () => {
     it('should give 5 profit AA 4x preflop win, dealer qualifies, no blind pay', (done) => {
       binding.runUthSimulations(
@@ -1182,11 +1182,11 @@ fdescribe('One flop card and one dealer card known', () => {
 
     it('should give -2 profit less than 10 good outs post-river fold, dealer doesnt qualify, no blind pay', (done) => {
       binding.runUthSimulations(
-        cnToInt(['Jc', 'As', '3c', 'Qh', '7c', '8c', '9h', '2c', '9d']), 0, 1, 1, 0,
+        cnToInt(['Jc', 'As', '3c', '6h', 'Qc', '7c', '8h', '2c', '9d']), 0, 1, 1, 0,
         (profit, edge, cards) => {
           expect({ profit, edge, ...cards }).toEqual({
-            communityCards: cnToInt(['Jc', 'As', '3c', 'Qh', '7c']),
-            playerCards: cnToInt(['8c', '9h']),
+            communityCards: cnToInt(['Jc', 'As', '3c', '6h', 'Qc']),
+            playerCards: cnToInt(['7c', '8h']),
             dealerCards: cnToInt(['2c', '9d']),
             profit: -2,
             edge: -2
