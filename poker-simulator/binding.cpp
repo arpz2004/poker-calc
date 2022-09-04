@@ -1,6 +1,7 @@
 #include <napi.h>
 #include <iostream>
 #include <random>
+#include <numeric>
 #include "omp.h"
 
 using namespace Napi;
@@ -383,16 +384,17 @@ result runUthSimulations(vector<int> deck, int sims, int knownDealerCards, int k
     return result{{}, {}, {}, 0, 0, "HandRanks.dat not found"};
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   std::fclose(fin);
-  double profit = 0;
+  vector<double> profits;
   if (deck.size() > 0)
   {
     numberOfSimulations = 1;
-    profit += calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+    profits.push_back(calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards));
   }
   else
   {
 #pragma omp parallel
     {
+      std::vector<double> profits_private;
 #pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
@@ -406,11 +408,22 @@ result runUthSimulations(vector<int> deck, int sims, int knownDealerCards, int k
                                44, 45, 46, 47, 48, 49, 50,
                                51, 52};
         std::shuffle(std::begin(newDeck), std::end(newDeck), rng);
-        profit += calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+        profits_private.push_back(calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards));
       }
+#pragma omp critical
+      profits.insert(profits.end(), profits_private.begin(), profits_private.end());
     }
   }
-  double edge = profit / (double)numberOfSimulations;
+  double profit = accumulate(profits.begin(), profits.end(), 0.0);
+  double edge = profit / profits.size();
+
+  vector<double> diff(profits.size());
+  transform(profits.begin(), profits.end(), diff.begin(), [edge](double x)
+            { return x - edge; });
+  double variance = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+  double stdev = sqrt(variance / profits.size());
+  cout << "Variance: " << variance << endl;
+  cout << "Stdev: " << stdev;
   vector<int> communityCards;
   vector<int> playerCards;
   vector<int> dealerCards;
