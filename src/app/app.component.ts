@@ -1,6 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { interval, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SimulationResults, SimulationStatus } from './models/simulationResults';
@@ -21,6 +21,8 @@ export class AppComponent implements OnInit, OnDestroy {
   executionTime = 0;
   executionTimeDisplay = '';
   errorMessage = '';
+  profitPerSession = 0;
+  stDevPct = 0;
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
@@ -28,7 +30,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.simulationForm = this.fb.group({
       numberOfSimulations: [
         '100,000,000'
-      ]
+      ],
+      handsPerSession: [100, [Validators.min(1)]]
     });
   }
 
@@ -40,6 +43,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.simulation = undefined;
       this.executionTimeDisplay = '';
       const numberOfSimulations = +this.simulationForm.get('numberOfSimulations')?.value?.replaceAll(',', '');
+      const handsPerSession = +this.simulationForm.get('handsPerSession')?.value?.replaceAll(',', '');
       this.simulationStatus = {
         currentSimulationNumber: 0,
         numberOfSimulations: numberOfSimulations
@@ -50,7 +54,9 @@ export class AppComponent implements OnInit, OnDestroy {
         })
       });
       const start = window.performance.now();
-      this.pokerEvalService.runUthSimulations(numberOfSimulations).subscribe((simulationResults) => {
+      this.pokerEvalService.runUthSimulations(numberOfSimulations, handsPerSession).subscribe((simulationResults) => {
+        this.profitPerSession = simulationResults.edge * handsPerSession;
+        this.stDevPct = simulationResults.stDev / handsPerSession;
         this.simulation = simulationResults;
         const end = window.performance.now();
         this.executionTime = end - start;
@@ -101,8 +107,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.executionTimeDisplay = duration.trim();
   }
 
-  onNumberOfSimulationsChange(value: string) {
-    const ctrl = this.simulationForm.get('numberOfSimulations') as FormControl;
+  onFormControlChange(controlName: string, value: string) {
+    const ctrl = this.simulationForm.get(controlName) as FormControl;
     let removedNonNumbers = value.replace(/\D/g, '');
     if (+removedNonNumbers > Math.pow(10, 9)) {
       removedNonNumbers = '' + Math.pow(10, 9);

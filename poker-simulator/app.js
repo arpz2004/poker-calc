@@ -33,23 +33,23 @@ app.post("/api/getSimulationStatus", (req, res, next) => {
   });
 });
 
-const uthSimulationResponse = (res) => (profit, edge, cards, error) => {
+const uthSimulationResponse = (res) => (profit, edge, stDev, cards, error) => {
   if (error) {
     res.status(500).json({ message: error });
   } else {
     res.status(200).json({
-      profit, edge, ...cards
+      profit, edge, stDev, ...cards
     });
   }
 }
 
-async function runUthSimulations(res, numberOfSimulations) {
-  const data = await binding.runUthSimulations([], numberOfSimulations, 1, 1, 0, uthSimulationResponse(res));
+async function runUthSimulations(res, numberOfSimulations, handsPerSession) {
+  const data = await binding.runUthSimulations([], numberOfSimulations, handsPerSession, 1, 1, 0, uthSimulationResponse(res));
   return data;
 }
 
 app.post("/api/runUthSimulations", (req, res, next) => {
-  runUthSimulations(res, req.body.numberOfSimulations);
+  runUthSimulations(res, req.body.numberOfSimulations, req.body.handsPerSession);
 });
 
 module.exports = app;

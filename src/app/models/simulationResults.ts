@@ -4,6 +4,7 @@ export interface SimulationResults {
   dealerCards: number[];
   profit: number;
   edge: number;
+  stDev: number;
 };
 
 export interface SimulationStatus {

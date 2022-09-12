@@ -372,23 +372,26 @@ struct result
   vector<int> dealerCards;
   double profit;
   double edge;
+  double stDev;
   string error;
 };
-result runUthSimulations(vector<int> deck, int sims, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
   numberOfSimulations = sims;
   // Load the HandRanks.DAT file and map it into the HR array
   memset(HR, 0, sizeof(HR));
   FILE *fin = fopen("HandRanks.dat", "rb");
   if (!fin)
-    return result{{}, {}, {}, 0, 0, "HandRanks.dat not found"};
+    return result{{}, {}, {}, 0, 0, 0, "HandRanks.dat not found"};
   size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
   std::fclose(fin);
   vector<double> profits;
+  vector<double> groupedProfits;
   if (deck.size() > 0)
   {
     numberOfSimulations = 1;
-    profits.push_back(calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards));
+    double handProfit = calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+    profits.push_back(handProfit);
   }
   else
   {
@@ -408,22 +411,32 @@ result runUthSimulations(vector<int> deck, int sims, int knownDealerCards, int k
                                44, 45, 46, 47, 48, 49, 50,
                                51, 52};
         std::shuffle(std::begin(newDeck), std::end(newDeck), rng);
-        profits_private.push_back(calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards));
+        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+        profits_private.push_back(handProfit);
       }
 #pragma omp critical
       profits.insert(profits.end(), profits_private.begin(), profits_private.end());
     }
   }
+  for (int i = 0; (i + 1) * handsPerSession <= profits.size(); i++)
+  {
+    double groupedProfit = accumulate(profits.begin() + i * handsPerSession, profits.begin() + (i + 1) * handsPerSession, 0.0);
+    groupedProfits.push_back(groupedProfit);
+  }
   double profit = accumulate(profits.begin(), profits.end(), 0.0);
   double edge = profit / profits.size();
+  double stDev = 0.0;
+  if (groupedProfits.size())
+  {
+    double groupedProfit = accumulate(groupedProfits.begin(), groupedProfits.end(), 0.0);
+    double groupedEdge = groupedProfit / groupedProfits.size();
 
-  vector<double> diff(profits.size());
-  transform(profits.begin(), profits.end(), diff.begin(), [edge](double x)
-            { return x - edge; });
-  double variance = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-  double stdev = sqrt(variance / profits.size());
-  cout << "Variance: " << variance << endl;
-  cout << "Stdev: " << stdev;
+    vector<double> diff(groupedProfits.size());
+    transform(groupedProfits.begin(), groupedProfits.end(), diff.begin(), [groupedEdge](double x)
+              { return x - groupedEdge; });
+    double variance = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+    stDev = sqrt(variance / groupedProfits.size());
+  }
   vector<int> communityCards;
   vector<int> playerCards;
   vector<int> dealerCards;
@@ -444,7 +457,8 @@ result runUthSimulations(vector<int> deck, int sims, int knownDealerCards, int k
       communityCards,
       dealerCards,
       profit,
-      edge};
+      edge,
+      stDev};
 }
 
 Value GetSimulationStatus(const CallbackInfo &info)
@@ -461,9 +475,9 @@ Value GetSimulationStatus(const CallbackInfo &info)
 class SimulationWorker : public Napi::AsyncWorker
 {
 public:
-  SimulationWorker(Napi::Function &callback, vector<int> deck, int numberOfSimulations, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
-      : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), knownDealerCards(knownDealerCards),
-        knownFlopCards(knownFlopCards), knownTurnRiverCards(knownTurnRiverCards), profit(0), edge(0), error("") {}
+  SimulationWorker(Napi::Function &callback, vector<int> deck, int numberOfSimulations, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+      : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), handsPerSession(handsPerSession), knownDealerCards(knownDealerCards),
+        knownFlopCards(knownFlopCards), knownTurnRiverCards(knownTurnRiverCards), profit(0), edge(0), stDev(0), error("") {}
   ~SimulationWorker() {}
 
   // Executed inside the worker-thread.
@@ -472,13 +486,14 @@ public:
   // should go on `this`.
   void Execute()
   {
-    result simResults = runUthSimulations(deck, numberOfSimulations, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+    result simResults = runUthSimulations(deck, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards);
     profit = simResults.profit;
     edge = simResults.edge;
     playerCards = simResults.playerCards;
     communityCards = simResults.communityCards;
     dealerCards = simResults.dealerCards;
     error = simResults.error;
+    stDev = simResults.stDev;
   }
 
   // Executed when the async work is complete
@@ -511,6 +526,7 @@ public:
     obj.Set("dealerCards", dealerCardsArr);
     Callback().Call({Napi::Number::New(Env(), profit),
                      Napi::Number::New(Env(), edge),
+                     Napi::Number::New(Env(), stDev),
                      obj,
                      Napi::String::New(Env(), error)});
   }
@@ -521,11 +537,13 @@ private:
   vector<int> dealerCards;
   vector<int> communityCards;
   int numberOfSimulations;
+  int handsPerSession;
   int knownDealerCards;
   int knownFlopCards;
   int knownTurnRiverCards;
   double profit;
   double edge;
+  double stDev;
   string error;
 };
 
@@ -534,11 +552,12 @@ Napi::Value RunUthSimulations(const Napi::CallbackInfo &info)
 {
   Array deckArray = info[0].As<Array>();
   numberOfSimulations = info[1].ToNumber();
-  int knownDealerCards = info[2].ToNumber();
-  int knownFlopCards = info[3].ToNumber();
-  int knownTurnRiverCards = info[4].ToNumber();
+  int handsPerSession = info[2].ToNumber();
+  int knownDealerCards = info[3].ToNumber();
+  int knownFlopCards = info[4].ToNumber();
+  int knownTurnRiverCards = info[5].ToNumber();
   vector<int> deck;
-  Napi::Function callback = info[5].As<Napi::Function>();
+  Napi::Function callback = info[6].As<Napi::Function>();
   if (deckArray.Length() > 0)
   {
     for (size_t i = 0; i < deckArray.Length(); i++)
@@ -547,7 +566,7 @@ Napi::Value RunUthSimulations(const Napi::CallbackInfo &info)
       deck.push_back(value);
     }
   }
-  SimulationWorker *piWorker = new SimulationWorker(callback, deck, numberOfSimulations, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+  SimulationWorker *piWorker = new SimulationWorker(callback, deck, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards);
   piWorker->Queue();
   return info.Env().Undefined();
 }
