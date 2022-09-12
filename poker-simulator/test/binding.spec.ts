@@ -1538,7 +1538,7 @@ describe('One flop card and one dealer card known', () => {
       );
     });
 
-    it('should give -6 profit A7o+ vs K (x < D < Q) 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+    it('should give 5 profit A7o+ vs K (x < D < Q) 4x preflop win, dealer qualifies, no blind pay', (done) => {
       binding.runUthSimulations(
         cnToInt(['6s', 'Ah', '2s', 'Kc', 'Td', 'Ac', '7d', 'Ks', '5d']), 0, 1, 1, 1, 0,
         (profit, edge, stDev, cards) => {
@@ -1546,8 +1546,8 @@ describe('One flop card and one dealer card known', () => {
             communityCards: cnToInt(['6s', 'Ah', '2s', 'Kc', 'Td']),
             playerCards: cnToInt(['Ac', '7d']),
             dealerCards: cnToInt(['Ks', '5d']),
-            profit: -6,
-            edge: -6,
+            profit: 5,
+            edge: 5,
             stDev: 0
           });
           done();
