@@ -327,11 +327,34 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     // Post-river
     else if (
         // At least 10 good outs
-        getGoodOuts(playerHand, communityCards, dealerCards[0], 10) >= 10 ||
-        // At least 15 good outs if best case is push
-        getGoodOuts(playerHand, communityCards, dealerCards[0], 15, true) >= 15)
+        // getGoodOuts(playerHand, communityCards, dealerCards[0], 10) >= 9 ||
+        // // At least 15 good outs if best case is push
+        getGoodOuts(playerHand, communityCards, dealerCards[0], 10, true) >= 10)
     {
       playBet = 1;
+    }
+  }
+  else if (knownDealerCards == 2 && knownFlopCards == 1 && knownTurnRiverCards == 2)
+  {
+    // Preflop
+    vector<int> knownPlayerHand;
+    knownPlayerHand.insert(knownPlayerHand.end(), playerHand.begin(), playerHand.end());
+    knownPlayerHand.push_back(flop[0]);
+    knownPlayerHand.insert(knownPlayerHand.end(), communityCards.begin() + 3, communityCards.begin() + 5);
+    vector<int> knownDealerHand;
+    knownDealerHand.insert(knownDealerHand.end(), dealerCards.begin(), dealerCards.end());
+    knownDealerHand.push_back(flop[0]);
+    knownDealerHand.insert(knownDealerHand.end(), communityCards.begin() + 3, communityCards.begin() + 5);
+    vector<int> dealerPostRiverHand;
+    dealerPostRiverHand.insert(dealerPostRiverHand.end(), dealerCards.begin(), dealerCards.end());
+    dealerPostRiverHand.insert(dealerPostRiverHand.end(), communityCards.begin(), communityCards.end());
+    if (FiveCardLookup(knownPlayerHand) > FiveCardLookup(knownDealerHand))
+    {
+      playBet = 4;
+    }
+    else if (LookupHand(postRiverHand) >= LookupHand(dealerPostRiverHand))
+    {
+      playBet = 2;
     }
   }
   return playBet;
