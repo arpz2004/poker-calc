@@ -1214,7 +1214,7 @@ describe('One flop card and one dealer card known', () => {
       );
     });
 
-    it('should give -6 profit three to a flush with hidden J+ 4x preflop loss, dealer doesnt qualify, no blind pay', (done) => {
+    it('should give -2 profit three to a flush with hidden J+ post-river fold (4x with flop only), dealer doesnt qualify, no blind pay', (done) => {
       binding.runUthSimulations(
         cnToInt(['4d', 'Kh', '6c', '8s', '3d', 'Jd', '2d', '8h', 'Td']), 0, 1, 1, 1, 0,
         (profit, edge, stDev, cards) => {
@@ -1222,8 +1222,8 @@ describe('One flop card and one dealer card known', () => {
             communityCards: cnToInt(['4d', 'Kh', '6c', '8s', '3d']),
             playerCards: cnToInt(['Jd', '2d']),
             dealerCards: cnToInt(['8h', 'Td']),
-            profit: -6,
-            edge: -6,
+            profit: -2,
+            edge: -2,
             stDev: 0
           });
           done();
