@@ -285,19 +285,37 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
   {
     // Preflop
     if (
-        // Dealer card or better and ten or better
-        ((playerCardValues[0] >= dealerCardValues[0] && playerCardValues[1] >= 8) || (playerCardValues[1] >= dealerCardValues[0] && playerCardValues[0] >= 8)) ||
-        // Pair of dealer cards or better
+        // Flop card gives you three of a kind
         (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] == flopCardValues[0]) ||
+        // Pair of dealer cards or better
         (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= dealerCardValues[0]) ||
-        // Pair of 7s or better
-        (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 5 && !(dealerCardValues[0] == flopCardValues[0] && dealerCardValues[0] > playerCardValues[0])) ||
-        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] >= 5) ||
-        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] >= 5) ||
         // Any pair with flop card, better than dealer card
         (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] > dealerCardValues[0]) || (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] > dealerCardValues[0]) ||
-        // Three to a flush including a hidden J or better
-        (playerSuitValues[0] == playerSuitValues[1] && playerSuitValues[0] == flopSuitValues[0] && (playerCardValues[0] >= 9 || playerCardValues[1] >= 9)))
+        // Any pair with flop card, same as dealer card, with T+ kicker
+        (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] == dealerCardValues[0] && playerCardValues[1] >= 8) ||
+        (playerCardValues[1] == flopCardValues[0] && playerCardValues[1] == dealerCardValues[0] && playerCardValues[0] >= 8) ||
+        // If dealer doesn't have a pair
+        (dealerCardValues[0] != flopCardValues[0] &&
+         // Dealer card or better and ten or better
+         ((playerCardValues[0] >= dealerCardValues[0] && playerCardValues[1] >= 8) || (playerCardValues[1] >= dealerCardValues[0] && playerCardValues[0] >= 8) ||
+          // Three to a flush including a hidden J or better (flop card only?)
+          (playerSuitValues[0] == playerSuitValues[1] && playerSuitValues[0] == flopSuitValues[0] && (playerCardValues[0] >= 9 || playerCardValues[1] >= 9)) ||
+          // Pair of 7s or better
+          (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 5) ||
+          (playerCardValues[0] == flopCardValues[0] && playerCardValues[0] >= 5) ||
+          (playerCardValues[1] == flopCardValues[0] && playerCardValues[1]) ||
+          // Q8s+ if dealer card worse than Q
+          (playerCardValues[0] == 10 && dealerCardValues[0] < playerCardValues[0] && playerCardValues[1] >= 6 && (playerHand[0] - playerHand[1]) % 4 == 0) ||
+          (playerCardValues[1] == 10 && dealerCardValues[0] < playerCardValues[1] && playerCardValues[0] >= 6 && (playerHand[0] - playerHand[1]) % 4 == 0) ||
+          // K6s+ if dealer card worse than K
+          (playerCardValues[0] == 11 && dealerCardValues[0] < playerCardValues[0] && playerCardValues[1] >= 4 && (playerHand[0] - playerHand[1]) % 4 == 0) ||
+          (playerCardValues[1] == 11 && dealerCardValues[0] < playerCardValues[1] && playerCardValues[0] >= 4 && (playerHand[0] - playerHand[1]) % 4 == 0) ||
+          // A2s+, A7o+ if dealer card worse than A
+          (playerCardValues[0] == 12 && dealerCardValues[0] < playerCardValues[0] && (playerCardValues[1] >= 5 || (playerHand[0] - playerHand[1]) % 4 == 0)) ||
+          (playerCardValues[1] == 12 && dealerCardValues[0] < playerCardValues[1] && (playerCardValues[0] >= 5 || (playerHand[0] - playerHand[1]) % 4 == 0)) ||
+          // H9s+ if dealer card is H = A, K, Q
+          (playerCardValues[0] >= 10 && dealerCardValues[0] == playerCardValues[0] && playerCardValues[1] >= 7 && (playerHand[0] - playerHand[1]) % 4 == 0) ||
+          (playerCardValues[1] >= 10 && dealerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 7 && (playerHand[0] - playerHand[1]) % 4 == 0))))
     {
       playBet = 4;
     }
