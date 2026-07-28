@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <numeric>
+#include <atomic>
 #include "omp.h"
 
 using namespace Napi;
@@ -18,6 +19,7 @@ bool HR_loaded = false;
 auto rng = std::default_random_engine{std::random_device{}()};
 int currentSimulationNumber;
 int numberOfSimulations;
+std::atomic<int> atomicCurrentSimulationNumber{0}; // Thread-safe progress counter
 
 // Pre-allocated deck array to avoid reallocation
 const int baseDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8,
@@ -444,6 +446,8 @@ struct result
 result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
   numberOfSimulations = sims;
+  atomicCurrentSimulationNumber.store(0, std::memory_order_relaxed); // Reset progress counter
+  
   // Load the HandRanks.DAT file once and cache it
   if (!loadHandRanks())
     return result{{}, {}, {}, 0, 0, 0, "HandRanks.dat not found"};
@@ -465,18 +469,34 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
       std::vector<double> profits_private;
       int estimatedPerThread = (sims / omp_get_max_threads()) + 1;
       profits_private.reserve(estimatedPerThread > 0 ? estimatedPerThread : 1); // Pre-allocate per thread
+      
+      // Thread-local RNG to avoid contention
+      std::random_device rd;
+      std::mt19937 local_rng(rd());
+      
+      // Pre-allocate deck array outside loop
+      vector<int> newDeck(52);
+      
 #pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
-        currentSimulationNumber = i + 1;
-        vector<int> newDeck(baseDeck, baseDeck + 52);
-        std::shuffle(std::begin(newDeck), std::end(newDeck), rng);
+        // Only update progress periodically to reduce contention
+        if (i % 1000 == 0) {
+          atomicCurrentSimulationNumber.store(i + 1, std::memory_order_relaxed);
+        }
+        
+        // Copy base deck and shuffle locally
+        std::copy(baseDeck, baseDeck + 52, newDeck.begin());
+        std::shuffle(newDeck.begin(), newDeck.end(), local_rng);
         double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
         profits_private.push_back(handProfit);
       }
 #pragma omp critical
       profits.insert(profits.end(), profits_private.begin(), profits_private.end());
     }
+    
+    // Update final progress
+    atomicCurrentSimulationNumber.store(numberOfSimulations, std::memory_order_relaxed);
   }
   for (int i = 0; (i + 1) * handsPerSession <= profits.size(); i++)
   {
@@ -527,6 +547,8 @@ Value GetSimulationStatus(const CallbackInfo &info)
   // Pre-load handranks file to improve performance on first simulation
   loadHandRanks();
   Object obj = Object::New(env);
+  // Use atomic counter for thread-safe access
+  currentSimulationNumber = atomicCurrentSimulationNumber.load(std::memory_order_relaxed);
   Value currSimNum = Number::New(info.Env(), currentSimulationNumber);
   Value numOfSims = Number::New(info.Env(), numberOfSimulations);
   obj.Set("currentSimulationNumber", currSimNum);
