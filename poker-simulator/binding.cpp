@@ -607,8 +607,8 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
 #pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
-        // Only update progress periodically to reduce contention
-        if (i % 1000 == 0) {
+        // Only update progress periodically to reduce contention (less frequent for better performance)
+        if (i % 2000 == 0) {
           atomicCurrentSimulationNumber.store(i + 1, std::memory_order_relaxed);
         }
         
