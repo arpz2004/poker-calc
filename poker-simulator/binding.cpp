@@ -90,6 +90,8 @@ __forceinline int LookupHandFast(const int* cards)
   return HR[p + cards[6]];
 }
 
+
+
 __forceinline int FiveCardLookupFast(const int* cards)
 {
   int p = HR[53 + cards[0]];
@@ -527,14 +529,20 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
 #pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
-        // Only update progress periodically to reduce contention
-        if (i % 1000 == 0) {
+        // Only update progress periodically to reduce contention (optimal 500)
+        if (i % 500 == 0) {
           atomicCurrentSimulationNumber.store(i + 1, std::memory_order_relaxed);
         }
         
-        // Optimized deck copy using memcpy for better performance
-        std::copy(baseDeck, baseDeck + 52, newDeck.begin());
-        std::shuffle(newDeck.begin(), newDeck.end(), local_rng);
+        // Optimized deck copy and shuffle
+        for (int j = 0; j < 52; j++) {
+          newDeck[j] = baseDeck[j];
+        }
+        // Fisher-Yates shuffle for better performance
+        for (int j = 51; j > 0; j--) {
+          int k = local_rng() % (j + 1);
+          std::swap(newDeck[j], newDeck[k]);
+        }
         
         // Process simulation
         double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
