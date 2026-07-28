@@ -161,8 +161,8 @@ export class AppComponent implements OnInit, OnDestroy {
   onFormControlChange(controlName: string, value: string) {
     const ctrl = this.simulationForm.get(controlName) as FormControl;
     let removedNonNumbers = value.replace(/\D/g, '');
-    if (+removedNonNumbers > Math.pow(10, 9)) {
-      removedNonNumbers = '' + Math.pow(10, 9);
+    if (+removedNonNumbers > Math.pow(10, 11)) {
+      removedNonNumbers = '' + Math.pow(10, 11);
     }
     if (+removedNonNumbers === 0) {
       ctrl.setValue('', { emitEvent: false, emitViewToModelChange: false });
