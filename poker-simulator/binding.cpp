@@ -184,18 +184,37 @@ auto Map(const std::vector<T> &input_array, Func op)
 
 int getBadOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
 {
-  vector<int> currentHand;
-  currentHand.insert(currentHand.end(), hand.begin(), hand.end());
-  currentHand.insert(currentHand.end(), communityCards.begin(), communityCards.end());
+  // Optimized version with reduced allocations and better card checking
+  int handSize = hand.size();
+  int communitySize = communityCards.size();
+  int currentHandSize = handSize + communitySize;
+  
+  // Pre-allocate currentHand and dealerHand to avoid repeated allocations
+  vector<int> currentHand(currentHandSize);
+  vector<int> dealerHand(communitySize + 1);
+  
+  // Build currentHand once
+  for (int i = 0; i < handSize; i++) currentHand[i] = hand[i];
+  for (int i = 0; i < communitySize; i++) currentHand[handSize + i] = communityCards[i];
+  
+  // Build dealerHand base once
+  for (int i = 0; i < communitySize; i++) dealerHand[i] = communityCards[i];
+  
+  // Optimized card existence checking with boolean array
+  bool cardExists[53] = {false};
+  for (int i = 0; i < currentHandSize; i++) {
+    cardExists[currentHand[i]] = true;
+  }
+  
   int dealerOuts = 0;
+  int currentHandRank = LookupHandFast(currentHand.data());
+  
   for (int i = 1; i <= 52; i++)
   {
-    if (!(find(currentHand.begin(), currentHand.end(), i) != currentHand.end()))
+    if (!cardExists[i])
     {
-      vector<int> dealerHand;
-      dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
-      dealerHand.insert(dealerHand.end(), i);
-      if (SixCardLookup(dealerHand) > LookupHandFast(currentHand.data()))
+      dealerHand[communitySize] = i;
+      if (SixCardLookup(dealerHand) > currentHandRank)
       {
         dealerOuts++;
         if (dealerOuts >= maxOuts)
@@ -210,30 +229,57 @@ int getBadOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
 
 int getBadOutsFlop(vector<int> hand, vector<int> flop, vector<int> knownDealerCards, int maxOuts)
 {
-  vector<int> currentHand;
-  currentHand.insert(currentHand.end(), hand.begin(), hand.end());
-  currentHand.insert(currentHand.end(), flop.begin(), flop.end());
+  // Optimized version with reduced allocations and better card checking
+  int handSize = hand.size();
+  int flopSize = flop.size();
+  int knownDealerSize = knownDealerCards.size();
+  int currentHandSize = handSize + flopSize;
+  
+  // Pre-allocate to avoid repeated allocations
+  vector<int> currentHand(currentHandSize + 1); // +1 for potential extension
+  vector<int> dealerHand(flopSize + knownDealerSize + 1);
+  
+  // Build currentHand once
+  for (int i = 0; i < handSize; i++) currentHand[i] = hand[i];
+  for (int i = 0; i < flopSize; i++) currentHand[handSize + i] = flop[i];
+  
+  // Build dealerHand base once
+  for (int i = 0; i < flopSize; i++) dealerHand[i] = flop[i];
+  for (int i = 0; i < knownDealerSize; i++) dealerHand[flopSize + i] = knownDealerCards[i];
+  
+  // Optimized card existence checking with boolean array
+  bool cardExists[53] = {false};
+  for (int i = 0; i < currentHandSize; i++) {
+    cardExists[currentHand[i]] = true;
+  }
+  for (int i = 0; i < knownDealerSize; i++) {
+    cardExists[knownDealerCards[i]] = true;
+  }
+  
   int dealerOuts = 0;
+  int currentHandRank = FiveCardLookupFast(currentHand.data());
+  
   for (int i = 1; i <= 52; i++)
   {
-    if (!(find(currentHand.begin(), currentHand.end(), i) != currentHand.end() || find(knownDealerCards.begin(), knownDealerCards.end(), i) != knownDealerCards.end()))
+    if (!cardExists[i])
     {
-      vector<int> dealerHand;
-      dealerHand.insert(dealerHand.end(), flop.begin(), flop.end());
-      dealerHand.insert(dealerHand.end(), knownDealerCards.begin(), knownDealerCards.end());
-      dealerHand.insert(dealerHand.end(), i);
-      if (dealerHand.size() == 6)
+      dealerHand[flopSize + knownDealerSize] = i;
+      int dealerHandSize = flopSize + knownDealerSize + 1;
+      
+      if (dealerHandSize == 6)
       {
-        currentHand.insert(currentHand.end(), i);
+        currentHand[currentHandSize] = i;
+        int currentHandRank6 = LookupHandFast(currentHand.data());
+        if (SixCardLookup(dealerHand) > currentHandRank6)
+        {
+          dealerOuts++;
+          if (dealerOuts >= maxOuts) break;
+        }
       }
-      if ((dealerHand.size() == 5 && FiveCardLookupFast(dealerHand.data()) > FiveCardLookupFast(currentHand.data())) ||
-          (dealerHand.size() == 6 && SixCardLookup(dealerHand) > LookupHand(currentHand)))
+      else if (FiveCardLookupFast(dealerHand.data()) > currentHandRank)
       {
         dealerOuts++;
-        if (dealerOuts >= maxOuts)
-        {
-          break;
-        }
+        if (dealerOuts >= maxOuts) break;
       }
     }
   }
@@ -242,23 +288,45 @@ int getBadOutsFlop(vector<int> hand, vector<int> flop, vector<int> knownDealerCa
 
 int getGoodOuts(vector<int> hand, vector<int> communityCards, int knownDealerCard, int maxOuts, bool push = false)
 {
-  vector<int> currentHand;
-  currentHand.insert(currentHand.end(), hand.begin(), hand.end());
-  currentHand.insert(currentHand.end(), communityCards.begin(), communityCards.end());
+  // Optimized version with reduced allocations and better card checking
+  int handSize = hand.size();
+  int communitySize = communityCards.size();
+  int currentHandSize = handSize + communitySize;
+  
+  // Pre-allocate to avoid repeated allocations
+  vector<int> currentHand(currentHandSize);
+  vector<int> dealerHand(communitySize + 2); // +2 for knownDealerCard and candidate card
+  
+  // Build currentHand once
+  for (int i = 0; i < handSize; i++) currentHand[i] = hand[i];
+  for (int i = 0; i < communitySize; i++) currentHand[handSize + i] = communityCards[i];
+  
+  // Build dealerHand base once
+  for (int i = 0; i < communitySize; i++) dealerHand[i] = communityCards[i];
+  dealerHand[communitySize] = knownDealerCard;
+  
+  // Optimized card existence checking with boolean array
+  bool cardExists[53] = {false};
+  for (int i = 0; i < currentHandSize; i++) {
+    cardExists[currentHand[i]] = true;
+  }
+  cardExists[knownDealerCard] = true;
+  
   int goodOuts = 0;
+  int currentHandRank = LookupHandFast(currentHand.data());
+  
   for (int i = 1; i <= 52; i++)
   {
-    if (!(find(currentHand.begin(), currentHand.end(), i) != currentHand.end() || knownDealerCard == i))
+    if (!cardExists[i])
     {
-      vector<int> dealerHand;
-      dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
-      dealerHand.insert(dealerHand.end(), knownDealerCard);
-      dealerHand.insert(dealerHand.end(), i);
-      if (LookupHandFast(currentHand.data()) > LookupHandFast(dealerHand.data()))
+      dealerHand[communitySize + 1] = i;
+      int dealerHandRank = LookupHandFast(dealerHand.data());
+      
+      if (currentHandRank > dealerHandRank)
       {
         goodOuts++;
       }
-      else if (push && LookupHandFast(currentHand.data()) == LookupHandFast(dealerHand.data()))
+      else if (push && currentHandRank == dealerHandRank)
       {
         goodOuts++;
       }
