@@ -499,7 +499,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
   else
   {
     profits.reserve(sims > 0 ? sims : 1); // Pre-allocate to avoid reallocations
-#pragma omp parallel
+#pragma omp parallel num_threads(omp_get_max_threads())
     {
       std::vector<double> profits_private;
       int estimatedPerThread = (sims / omp_get_max_threads()) + 1;
@@ -512,7 +512,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
       // Pre-allocate deck array outside loop
       vector<int> newDeck(52);
       
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for schedule(static, 10000) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
         // Only update progress periodically to reduce contention
