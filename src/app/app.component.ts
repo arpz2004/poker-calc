@@ -51,8 +51,8 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       this.lastProgressUpdate = 0; // Reset progress tracking
       
-      // Use polling with race condition prevention and reduced frequency
-      const simulationStatus$ = interval(2000).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
+      // Use simple fixed polling with race condition prevention
+      const simulationStatus$ = interval(3000).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
         this.pokerEvalService.getSimulationStatus().subscribe((simulationStatus) => {
           // Only update if the new progress is higher than the last update (prevents race conditions)
           if (simulationStatus.currentSimulationNumber >= this.lastProgressUpdate) {
