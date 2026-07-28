@@ -427,22 +427,33 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
 
 double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
-  vector<int> communityCards;
-  communityCards.insert(communityCards.end(), deck.begin(), deck.begin() + 5);
-  vector<int> playerCards;
-  playerCards.insert(playerCards.end(), deck.begin() + 5, deck.begin() + 7);
-  vector<int> dealerCards;
-  dealerCards.insert(dealerCards.end(), deck.begin() + 7, deck.begin() + 9);
-  vector<int> playerHand;
-  playerHand.insert(playerHand.end(), playerCards.begin(), playerCards.end());
-  playerHand.insert(playerHand.end(), communityCards.begin(), communityCards.end());
-  vector<int> dealerHand;
-  dealerHand.insert(dealerHand.end(), dealerCards.begin(), dealerCards.end());
-  dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
-  int playBet = getPlayBet(playerCards, communityCards, dealerCards, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+  // Optimized to reduce vector allocations by using manual array copying
+  int communityCards[5];
+  int playerCards[2];
+  int dealerCards[2];
+  int playerHand[7];
+  int dealerHand[7];
+  
+  // Manual array copying for better performance
+  for (int i = 0; i < 5; i++) communityCards[i] = deck[i];
+  for (int i = 0; i < 2; i++) playerCards[i] = deck[5 + i];
+  for (int i = 0; i < 2; i++) dealerCards[i] = deck[7 + i];
+  
+  // Construct hands directly
+  for (int i = 0; i < 2; i++) playerHand[i] = playerCards[i];
+  for (int i = 0; i < 5; i++) playerHand[2 + i] = communityCards[i];
+  for (int i = 0; i < 2; i++) dealerHand[i] = dealerCards[i];
+  for (int i = 0; i < 5; i++) dealerHand[2 + i] = communityCards[i];
+  
+  // Convert to vectors for getPlayBet compatibility
+  vector<int> playerCardsVec(playerCards, playerCards + 2);
+  vector<int> communityCardsVec(communityCards, communityCards + 5);
+  vector<int> dealerCardsVec(dealerCards, dealerCards + 2);
+  
+  int playBet = getPlayBet(playerCardsVec, communityCardsVec, dealerCardsVec, knownDealerCards, knownFlopCards, knownTurnRiverCards);
   double profit = 0;
-  int playerHandRank = LookupHandFast(playerHand.data());
-  int dealerHandRank = LookupHandFast(dealerHand.data());
+  int playerHandRank = LookupHandFast(playerHand);
+  int dealerHandRank = LookupHandFast(dealerHand);
   if (playerHandRank > dealerHandRank && playBet > 0)
   {
     // Ante bet
