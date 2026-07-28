@@ -21,6 +21,8 @@ int currentSimulationNumber;
 int numberOfSimulations;
 std::atomic<int> atomicCurrentSimulationNumber{0}; // Thread-safe progress counter
 
+
+
 // Pre-allocated deck array to avoid reallocation
 const int baseDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8,
                           9, 10, 11, 12, 13, 14, 15,
@@ -86,6 +88,8 @@ int LookupHandFast(const int* cards)
   p = HR[p + cards[5]];
   return HR[p + cards[6]];
 }
+
+
 
 int FiveCardLookup(vector<int> cards)
 {
@@ -523,6 +527,8 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
         // Copy base deck and shuffle locally
         std::copy(baseDeck, baseDeck + 52, newDeck.begin());
         std::shuffle(newDeck.begin(), newDeck.end(), local_rng);
+        
+        // Inline the hand profit calculation for better performance
         double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
         profits_private.push_back(handProfit);
       }
