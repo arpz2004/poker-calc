@@ -504,7 +504,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
   return playBet;
 }
 
-double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopCards, int knownTurnRiverCount = 0)
 {
   // Optimized to reduce vector allocations by using manual array copying
   int communityCards[5];
@@ -529,7 +529,8 @@ double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopC
   vector<int> communityCardsVec(communityCards, communityCards + 5);
   vector<int> dealerCardsVec(dealerCards, dealerCards + 2);
   
-  int playBet = getPlayBet(playerCardsVec, communityCardsVec, dealerCardsVec, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+  // Use standard strategy function
+  int playBet = getPlayBet(playerCardsVec, communityCardsVec, dealerCardsVec, knownDealerCards, knownFlopCards, knownTurnRiverCount);
   double profit = 0;
   int playerHandRank = LookupHandFast(playerHand);
   int dealerHandRank = LookupHandFast(dealerHand);
@@ -622,7 +623,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
         }
         
         // Process simulation
-        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, 0);
         profits_private.push_back(handProfit);
       }
 #pragma omp critical
