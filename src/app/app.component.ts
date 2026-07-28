@@ -23,6 +23,7 @@ export class AppComponent implements OnInit, OnDestroy {
   errorMessage = '';
   profitPerSession = 0;
   stDevPct = 0;
+  lastProgressUpdate = 0; // Track last progress to prevent race conditions
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
@@ -42,17 +43,25 @@ export class AppComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.simulation = undefined;
       this.executionTimeDisplay = '';
-      const numberOfSimulations = +this.simulationForm.get('numberOfSimulations')?.value?.replaceAll(',', '');
-      const handsPerSession = +this.simulationForm.get('handsPerSession')?.value?.replaceAll(',', '');
+      const numberOfSimulations = +String(this.simulationForm.get('numberOfSimulations')?.value || '0').replace(/,/g, '');
+      const handsPerSession = +String(this.simulationForm.get('handsPerSession')?.value || '0').replace(/,/g, '');
       this.simulationStatus = {
         currentSimulationNumber: 0,
         numberOfSimulations: numberOfSimulations
       }
-      const simulationStatus$ = interval(1000).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
+      this.lastProgressUpdate = 0; // Reset progress tracking
+      
+      // Use polling with race condition prevention and reduced frequency
+      const simulationStatus$ = interval(2000).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
         this.pokerEvalService.getSimulationStatus().subscribe((simulationStatus) => {
-          this.simulationStatus = simulationStatus;
+          // Only update if the new progress is higher than the last update (prevents race conditions)
+          if (simulationStatus.currentSimulationNumber >= this.lastProgressUpdate) {
+            this.simulationStatus = simulationStatus;
+            this.lastProgressUpdate = simulationStatus.currentSimulationNumber;
+          }
         })
       });
+      
       const start = window.performance.now();
       this.pokerEvalService.runUthSimulations(numberOfSimulations, handsPerSession).subscribe((simulationResults) => {
         this.profitPerSession = simulationResults.edge * handsPerSession;

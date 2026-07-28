@@ -13,10 +13,37 @@ const int ROYAL_FLUSH = 36874;
 
 // The handranks lookup table- loaded from HANDRANKS.DAT.
 int HR[32487834];
+bool HR_loaded = false;
 
 auto rng = std::default_random_engine{std::random_device{}()};
 int currentSimulationNumber;
 int numberOfSimulations;
+
+// Pre-allocated deck array to avoid reallocation
+const int baseDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8,
+                          9, 10, 11, 12, 13, 14, 15,
+                          16, 17, 18, 19, 20, 21, 22,
+                          23, 24, 25, 26, 27, 28, 29,
+                          30, 31, 32, 33, 34, 35, 36,
+                          37, 38, 39, 40, 41, 42, 43,
+                          44, 45, 46, 47, 48, 49, 50,
+                          51, 52};
+
+// Load HR array once and cache it
+bool loadHandRanks()
+{
+  if (HR_loaded)
+    return true;
+  
+  memset(HR, 0, sizeof(HR));
+  FILE *fin = fopen("HandRanks.dat", "rb");
+  if (!fin)
+    return false;
+  size_t bytesread = fread(HR, sizeof(HR), 1, fin);
+  std::fclose(fin);
+  HR_loaded = true;
+  return true;
+}
 
 void print(std::vector<int> const &input)
 {
@@ -417,38 +444,32 @@ struct result
 result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
 {
   numberOfSimulations = sims;
-  // Load the HandRanks.DAT file and map it into the HR array
-  memset(HR, 0, sizeof(HR));
-  FILE *fin = fopen("HandRanks.dat", "rb");
-  if (!fin)
+  // Load the HandRanks.DAT file once and cache it
+  if (!loadHandRanks())
     return result{{}, {}, {}, 0, 0, 0, "HandRanks.dat not found"};
-  size_t bytesread = fread(HR, sizeof(HR), 1, fin); // get the HandRank Array
-  std::fclose(fin);
+  
   vector<double> profits;
   vector<double> groupedProfits;
   if (deck.size() > 0)
   {
     numberOfSimulations = 1;
+    profits.reserve(1);
     double handProfit = calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
     profits.push_back(handProfit);
   }
   else
   {
+    profits.reserve(sims > 0 ? sims : 1); // Pre-allocate to avoid reallocations
 #pragma omp parallel
     {
       std::vector<double> profits_private;
+      int estimatedPerThread = (sims / omp_get_max_threads()) + 1;
+      profits_private.reserve(estimatedPerThread > 0 ? estimatedPerThread : 1); // Pre-allocate per thread
 #pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
         currentSimulationNumber = i + 1;
-        vector<int> newDeck = {1, 2, 3, 4, 5, 6, 7, 8,
-                               9, 10, 11, 12, 13, 14, 15,
-                               16, 17, 18, 19, 20, 21, 22,
-                               23, 24, 25, 26, 27, 28, 29,
-                               30, 31, 32, 33, 34, 35, 36,
-                               37, 38, 39, 40, 41, 42, 43,
-                               44, 45, 46, 47, 48, 49, 50,
-                               51, 52};
+        vector<int> newDeck(baseDeck, baseDeck + 52);
         std::shuffle(std::begin(newDeck), std::end(newDeck), rng);
         double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
         profits_private.push_back(handProfit);
@@ -503,6 +524,8 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
 Value GetSimulationStatus(const CallbackInfo &info)
 {
   Env env = info.Env();
+  // Pre-load handranks file to improve performance on first simulation
+  loadHandRanks();
   Object obj = Object::New(env);
   Value currSimNum = Number::New(info.Env(), currentSimulationNumber);
   Value numOfSims = Number::New(info.Env(), numberOfSimulations);
