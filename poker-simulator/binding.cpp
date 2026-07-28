@@ -75,6 +75,18 @@ int LookupHand(vector<int> cards)
   return HR[p + cards[6]];
 }
 
+// Optimized version using raw array pointer for better performance
+int LookupHandFast(const int* cards)
+{
+  int p = HR[53 + cards[0]];
+  p = HR[p + cards[1]];
+  p = HR[p + cards[2]];
+  p = HR[p + cards[3]];
+  p = HR[p + cards[4]];
+  p = HR[p + cards[5]];
+  return HR[p + cards[6]];
+}
+
 int FiveCardLookup(vector<int> cards)
 {
   int p = HR[53 + cards[0]];
@@ -85,7 +97,30 @@ int FiveCardLookup(vector<int> cards)
   return HR[p];
 }
 
+// Optimized version using raw array pointer for better performance
+int FiveCardLookupFast(const int* cards)
+{
+  int p = HR[53 + cards[0]];
+  p = HR[p + cards[1]];
+  p = HR[p + cards[2]];
+  p = HR[p + cards[3]];
+  p = HR[p + cards[4]];
+  return HR[p];
+}
+
 int SixCardLookup(vector<int> cards)
+{
+  int p = HR[53 + cards[0]];
+  p = HR[p + cards[1]];
+  p = HR[p + cards[2]];
+  p = HR[p + cards[3]];
+  p = HR[p + cards[4]];
+  p = HR[p + cards[5]];
+  return HR[p];
+}
+
+// Optimized version using raw array pointer for better performance
+int SixCardLookupFast(const int* cards)
 {
   int p = HR[53 + cards[0]];
   p = HR[p + cards[1]];
@@ -155,7 +190,7 @@ int getBadOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
       vector<int> dealerHand;
       dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
       dealerHand.insert(dealerHand.end(), i);
-      if (SixCardLookup(dealerHand) > LookupHand(currentHand))
+      if (SixCardLookupFast(dealerHand.data()) > LookupHandFast(currentHand.data()))
       {
         dealerOuts++;
         if (dealerOuts >= maxOuts)
@@ -214,11 +249,11 @@ int getGoodOuts(vector<int> hand, vector<int> communityCards, int knownDealerCar
       dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
       dealerHand.insert(dealerHand.end(), knownDealerCard);
       dealerHand.insert(dealerHand.end(), i);
-      if (LookupHand(currentHand) > LookupHand(dealerHand))
+      if (LookupHandFast(currentHand.data()) > LookupHandFast(dealerHand.data()))
       {
         goodOuts++;
       }
-      else if (push && LookupHand(currentHand) == LookupHand(dealerHand))
+      else if (push && LookupHandFast(currentHand.data()) == LookupHandFast(dealerHand.data()))
       {
         goodOuts++;
       }
@@ -296,13 +331,13 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     // Post-river
     else if (
         // Two pair or better
-        (LookupHand(postRiverHand) >> 12 >= 3 &&
+        (LookupHandFast(postRiverHand.data()) >> 12 >= 3 &&
          // Not two pair with two pair on the board
-         !(LookupHand(postRiverHand) >> 12 == 3 && FiveCardLookup(communityCards) >> 12 == 3) &&
+         !(LookupHandFast(postRiverHand.data()) >> 12 == 3 && FiveCardLookupFast(communityCards.data()) >> 12 == 3) &&
          // Not three of a kind with three of a kind on the board
-         !(LookupHand(postRiverHand) >> 12 == 4 && FiveCardLookup(communityCards) >> 12 == 4)) ||
+         !(LookupHandFast(postRiverHand.data()) >> 12 == 4 && FiveCardLookupFast(communityCards.data()) >> 12 == 4)) ||
         // Hidden pair
-        (LookupHand(postRiverHand) >> 12 == 2 && isUnique(communityCardValues)) ||
+        (LookupHandFast(postRiverHand.data()) >> 12 == 2 && isUnique(communityCardValues)) ||
         // Less than 21 dealer outs
         getBadOuts(playerHand, communityCards, 21) < 21)
     {
@@ -377,11 +412,11 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     vector<int> dealerPostRiverHand;
     dealerPostRiverHand.insert(dealerPostRiverHand.end(), dealerCards.begin(), dealerCards.end());
     dealerPostRiverHand.insert(dealerPostRiverHand.end(), communityCards.begin(), communityCards.end());
-    if (FiveCardLookup(knownPlayerHand) > FiveCardLookup(knownDealerHand))
+    if (FiveCardLookupFast(knownPlayerHand.data()) > FiveCardLookupFast(knownDealerHand.data()))
     {
       playBet = 4;
     }
-    else if (LookupHand(postRiverHand) >= LookupHand(dealerPostRiverHand))
+    else if (LookupHandFast(postRiverHand.data()) >= LookupHandFast(dealerPostRiverHand.data()))
     {
       playBet = 2;
     }
@@ -405,8 +440,8 @@ double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopC
   dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
   int playBet = getPlayBet(playerCards, communityCards, dealerCards, knownDealerCards, knownFlopCards, knownTurnRiverCards);
   double profit = 0;
-  int playerHandRank = LookupHand(playerHand);
-  int dealerHandRank = LookupHand(dealerHand);
+  int playerHandRank = LookupHandFast(playerHand.data());
+  int dealerHandRank = LookupHandFast(dealerHand.data());
   if (playerHandRank > dealerHandRank && playBet > 0)
   {
     // Ante bet
