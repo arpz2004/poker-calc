@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2015",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
@@ -8,8 +8,10 @@
     "experimentalDecorators": true,
     "removeComments": false,
     "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "allowJs": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
     "types": [
       "jasmine",
       "node"
@@ -17,5 +19,9 @@
   },
   "include": [
     "test/*.spec.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
   ]
 }

@@ -1,6 +1,6 @@
 import { cardNotationToInt } from '../../src/app/utils/cardConversion';
 import { SimulationResults } from '../../src/app/models/simulationResults';
-import * as bindings from 'bindings';
+const bindings = require('bindings');
 const binding: {
   runUthSimulations: (
     cards: number[],

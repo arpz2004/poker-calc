@@ -68,5 +68,7 @@
         "xmemory": "cpp",
         "xstddef": "cpp",
         "xtr1common": "cpp"
-    }
+    },
+    "typescript.tsdk": "poker-simulator/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
 }

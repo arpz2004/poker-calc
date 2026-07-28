@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "build": "rm -rf build/Release && node-gyp build",
+    "build": "if exist build\\Release rmdir /s /q build\\Release && node-gyp build",
     "configure": "node-gyp configure",
     "test": "jasmine-ts --reporter=jasmine-console-reporter --config=jasmine.json"
   },
@@ -13,6 +13,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/bindings": "^1.5.1",
+    "@types/debug": "^4.1.13",
+    "@types/express": "^5.0.6",
     "@types/jasmine": "^3.10.0",
     "@types/node": "^18.7.2",
     "jasmine": "^3.10.0",
@@ -23,7 +25,10 @@
   },
   "dependencies": {
     "bindings": "^1.5.0",
+    "body-parser": "^2.3.0",
+    "debug": "^4.4.3",
+    "express": "^5.2.1",
     "node-addon-api": "^3.2.1",
-    "node-gyp": "^9.1.0"
+    "node-gyp": "^13.0.1"
   }
 }
