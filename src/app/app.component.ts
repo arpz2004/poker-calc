@@ -24,6 +24,8 @@ export class AppComponent implements OnInit, OnDestroy {
   profitPerSession = 0;
   stDevPct = 0;
   lastProgressUpdate = 0; // Track last progress to prevent race conditions
+  lastProgressTime = 0; // Track when last progress was received
+  progressRate = 0; // Track rate of progress for interpolation
 
   constructor(private fb: FormBuilder, private pokerEvalService: PokerEvalService) { }
 
@@ -50,16 +52,48 @@ export class AppComponent implements OnInit, OnDestroy {
         numberOfSimulations: numberOfSimulations
       }
       this.lastProgressUpdate = 0; // Reset progress tracking
+      this.lastProgressTime = Date.now(); // Reset time tracking
+      this.progressRate = 0; // Reset progress rate
       
       // Use simple fixed polling with race condition prevention
       const simulationStatus$ = interval(3000).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
         this.pokerEvalService.getSimulationStatus().subscribe((simulationStatus) => {
           // Only update if the new progress is higher than the last update (prevents race conditions)
           if (simulationStatus.currentSimulationNumber >= this.lastProgressUpdate) {
+            // Calculate progress rate for interpolation
+            const currentTime = Date.now();
+            const timeDiff = currentTime - this.lastProgressTime;
+            const progressDiff = simulationStatus.currentSimulationNumber - this.lastProgressUpdate;
+            
+            if (timeDiff > 0 && progressDiff > 0) {
+              this.progressRate = progressDiff / timeDiff; // Rate: simulations per millisecond
+            }
+            
             this.simulationStatus = simulationStatus;
             this.lastProgressUpdate = simulationStatus.currentSimulationNumber;
+            this.lastProgressTime = currentTime;
           }
         })
+      });
+      
+      // Client-side progress interpolation for smoother UI
+      const interpolationInterval$ = interval(100).pipe(takeUntil(this.simulationCompleted)).subscribe(() => {
+        if (this.simulationStatus && this.progressRate > 0 && this.lastProgressUpdate < this.simulationStatus.numberOfSimulations) {
+          const currentTime = Date.now();
+          const timeSinceLastUpdate = currentTime - this.lastProgressTime;
+          
+          // Estimate current progress based on rate
+          const estimatedProgress = Math.min(
+            this.lastProgressUpdate + (this.progressRate * timeSinceLastUpdate),
+            this.simulationStatus.numberOfSimulations
+          );
+          
+          // Update display with interpolated progress
+          this.simulationStatus = {
+            currentSimulationNumber: Math.floor(estimatedProgress),
+            numberOfSimulations: this.simulationStatus.numberOfSimulations
+          };
+        }
       });
       
       const start = window.performance.now();
@@ -72,12 +106,14 @@ export class AppComponent implements OnInit, OnDestroy {
         this.convertExecutionTime();
         this.loading = false;
         simulationStatus$.unsubscribe();
+        interpolationInterval$.unsubscribe();
       }, (errorResp) => {
         this.simulationStatus = undefined;
         this.submitted = false;
         this.loading = false;
         this.errorMessage = errorResp && errorResp.error && errorResp.error.message || 'Server Error';
         simulationStatus$.unsubscribe();
+        interpolationInterval$.unsubscribe();
       });
     }
   }
