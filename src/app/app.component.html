@@ -2,6 +2,18 @@
   <div>
     <form [formGroup]="simulationForm">
       <div class="mb-3">
+        <label class="form-label">Known Dealer Cards (0-2)</label>
+        <input class="form-control" type="number" formControlName="knownDealerCards" min="0" max="2" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Known Flop Cards (0-3)</label>
+        <input class="form-control" type="number" formControlName="knownFlopCards" min="0" max="3" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Known Turn/River Cards (0-2)</label>
+        <input class="form-control" type="number" formControlName="knownTurnRiverCards" min="0" max="2" />
+      </div>
+      <div class="mb-3">
         <label class="form-label">Number of Simulations</label>
         <input class="form-control" type="text" formControlName="numberOfSimulations"
           (ngModelChange)="onFormControlChange('numberOfSimulations', $event)" />

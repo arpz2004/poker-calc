@@ -34,7 +34,10 @@ export class AppComponent implements OnInit, OnDestroy {
       numberOfSimulations: [
         '100,000,000'
       ],
-      handsPerSession: [100, [Validators.min(1)]]
+      handsPerSession: [100, [Validators.min(1)]],
+      knownDealerCards: [0, [Validators.min(0), Validators.max(2)]],
+      knownFlopCards: [0, [Validators.min(0), Validators.max(3)]],
+      knownTurnRiverCards: [0, [Validators.min(0), Validators.max(2)]]
     });
   }
 
@@ -47,6 +50,9 @@ export class AppComponent implements OnInit, OnDestroy {
       this.executionTimeDisplay = '';
       const numberOfSimulations = +String(this.simulationForm.get('numberOfSimulations')?.value || '0').replace(/,/g, '');
       const handsPerSession = +String(this.simulationForm.get('handsPerSession')?.value || '0').replace(/,/g, '');
+      const knownDealerCards = +this.simulationForm.get('knownDealerCards')?.value;
+      const knownFlopCards = +this.simulationForm.get('knownFlopCards')?.value;
+      const knownTurnRiverCards = +this.simulationForm.get('knownTurnRiverCards')?.value;
       this.simulationStatus = {
         currentSimulationNumber: 0,
         numberOfSimulations: numberOfSimulations
@@ -97,7 +103,7 @@ export class AppComponent implements OnInit, OnDestroy {
       });
       
       const start = window.performance.now();
-      this.pokerEvalService.runUthSimulations(numberOfSimulations, handsPerSession).subscribe((simulationResults) => {
+      this.pokerEvalService.runUthSimulations(numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards).subscribe((simulationResults) => {
         this.profitPerSession = simulationResults.edge * handsPerSession;
         this.stDevPct = simulationResults.stDev / handsPerSession;
         this.simulation = simulationResults;

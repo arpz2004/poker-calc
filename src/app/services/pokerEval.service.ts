@@ -8,10 +8,13 @@ export class PokerEvalService {
 
   constructor(private http: HttpClient) { }
 
-  runUthSimulations(numberOfSimulations: number, handsPerSession: number): Observable<SimulationResults> {
+  runUthSimulations(numberOfSimulations: number, handsPerSession: number, knownDealerCards: number, knownFlopCards: number, knownTurnRiverCards: number): Observable<SimulationResults> {
     const requestBody = {
       numberOfSimulations,
-      handsPerSession
+      handsPerSession,
+      knownDealerCards,
+      knownFlopCards,
+      knownTurnRiverCards
     };
     return this.http.post<SimulationResults>
       ('http://localhost:3000/api/runUthSimulations', requestBody);
