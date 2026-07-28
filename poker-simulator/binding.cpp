@@ -17,6 +17,8 @@ const int ROYAL_FLUSH = 36874;
 __declspec(align(64)) int HR[32487834];
 bool HR_loaded = false;
 
+
+
 auto rng = std::default_random_engine{std::random_device{}()};
 int currentSimulationNumber;
 int numberOfSimulations;
@@ -332,19 +334,26 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
       playBet = 2;
     }
     // Post-river
-    else if (
-        // Two pair or better
-        (LookupHandFast(postRiverHand.data()) >> 12 >= 3 &&
-         // Not two pair with two pair on the board
-         !(LookupHandFast(postRiverHand.data()) >> 12 == 3 && FiveCardLookupFast(communityCards.data()) >> 12 == 3) &&
-         // Not three of a kind with three of a kind on the board
-         !(LookupHandFast(postRiverHand.data()) >> 12 == 4 && FiveCardLookupFast(communityCards.data()) >> 12 == 4)) ||
-        // Hidden pair
-        (LookupHandFast(postRiverHand.data()) >> 12 == 2 && isUnique(communityCardValues)) ||
-        // Less than 21 dealer outs
-        getBadOuts(playerHand, communityCards, 21) < 21)
-    {
-      playBet = 1;
+    else {
+      // Early termination: check high-priority conditions first
+      int postRiverRank = LookupHandFast(postRiverHand.data());
+      int postRiverCategory = postRiverRank >> 12;
+      int communityCategory = FiveCardLookupFast(communityCards.data()) >> 12;
+      
+      if (
+          // Two pair or better
+          (postRiverCategory >= 3 &&
+           // Not two pair with two pair on the board
+           !(postRiverCategory == 3 && communityCategory == 3) &&
+           // Not three of a kind with three of a kind on the board
+           !(postRiverCategory == 4 && communityCategory == 4)) ||
+          // Hidden pair
+          (postRiverCategory == 2 && isUnique(communityCardValues)) ||
+          // Less than 21 dealer outs (most expensive check - do last)
+          getBadOuts(playerHand, communityCards, 21) < 21)
+      {
+        playBet = 1;
+      }
     }
   }
   // 1 known flop card and 1 known dealer card
@@ -529,8 +538,8 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
 #pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
-        // Only update progress periodically to reduce contention (optimal 500)
-        if (i % 500 == 0) {
+        // Only update progress periodically to reduce contention
+        if (i % 1000 == 0) {
           atomicCurrentSimulationNumber.store(i + 1, std::memory_order_relaxed);
         }
         
