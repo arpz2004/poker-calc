@@ -623,7 +623,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
         }
         
         // Process simulation
-        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, 0);
+        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
         profits_private.push_back(handProfit);
       }
 #pragma omp critical
