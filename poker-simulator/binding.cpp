@@ -78,7 +78,7 @@ int LookupHand(vector<int> cards)
 }
 
 // Optimized version using raw array pointer for better performance
-int LookupHandFast(const int* cards)
+__forceinline int LookupHandFast(const int* cards)
 {
   int p = HR[53 + cards[0]];
   p = HR[p + cards[1]];
@@ -89,9 +89,7 @@ int LookupHandFast(const int* cards)
   return HR[p + cards[6]];
 }
 
-
-
-int FiveCardLookup(vector<int> cards)
+__forceinline int FiveCardLookupFast(const int* cards)
 {
   int p = HR[53 + cards[0]];
   p = HR[p + cards[1]];
@@ -101,8 +99,7 @@ int FiveCardLookup(vector<int> cards)
   return HR[p];
 }
 
-// Optimized version using raw array pointer for better performance
-int FiveCardLookupFast(const int* cards)
+int FiveCardLookup(vector<int> cards)
 {
   int p = HR[53 + cards[0]];
   p = HR[p + cards[1]];
@@ -123,8 +120,7 @@ int SixCardLookup(vector<int> cards)
   return HR[p];
 }
 
-// Optimized version using raw array pointer for better performance
-int SixCardLookupFast(const int* cards)
+__forceinline int SixCardLookupFast(const int* cards)
 {
   int p = HR[53 + cards[0]];
   p = HR[p + cards[1]];
@@ -194,7 +190,7 @@ int getBadOuts(vector<int> hand, vector<int> communityCards, int maxOuts)
       vector<int> dealerHand;
       dealerHand.insert(dealerHand.end(), communityCards.begin(), communityCards.end());
       dealerHand.insert(dealerHand.end(), i);
-      if (SixCardLookupFast(dealerHand.data()) > LookupHandFast(currentHand.data()))
+      if (SixCardLookup(dealerHand) > LookupHandFast(currentHand.data()))
       {
         dealerOuts++;
         if (dealerOuts >= maxOuts)
@@ -225,8 +221,8 @@ int getBadOutsFlop(vector<int> hand, vector<int> flop, vector<int> knownDealerCa
       {
         currentHand.insert(currentHand.end(), i);
       }
-      if ((dealerHand.size() == 5 && FiveCardLookup(dealerHand) > FiveCardLookup(currentHand)) ||
-          (dealerHand.size() == 6 && SixCardLookup(dealerHand) > SixCardLookup(currentHand)))
+      if ((dealerHand.size() == 5 && FiveCardLookupFast(dealerHand.data()) > FiveCardLookupFast(currentHand.data())) ||
+          (dealerHand.size() == 6 && SixCardLookup(dealerHand) > LookupHand(currentHand)))
       {
         dealerOuts++;
         if (dealerOuts >= maxOuts)
@@ -321,11 +317,11 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     // Postflop
     else if (
         // Two pair or better
-        (FiveCardLookup(postFlopHand) >> 12 >= 3 &&
+        (FiveCardLookupFast(postFlopHand.data()) >> 12 >= 3 &&
          // Not 3 of a kind with all 3 same flop card
-         !(FiveCardLookup(postFlopHand) >> 12 == 4 && flopCardValues[0] == flopCardValues[1] && flopCardValues[0] == flopCardValues[2])) ||
+         !(FiveCardLookupFast(postFlopHand.data()) >> 12 == 4 && flopCardValues[0] == flopCardValues[1] && flopCardValues[0] == flopCardValues[2])) ||
         // Hidden pair except pocket deuces
-        (FiveCardLookup(postFlopHand) >> 12 == 2 && !(playerCardValues[0] == 0 && playerCardValues[1] == 0) && isUnique(flopCardValues)) ||
+        (FiveCardLookupFast(postFlopHand.data()) >> 12 == 2 && !(playerCardValues[0] == 0 && playerCardValues[1] == 0) && isUnique(flopCardValues)) ||
         // Four to a flush including a hidden 10 or better
         ((sortedSuitValues[1] == sortedSuitValues[4] || sortedSuitValues[0] == sortedSuitValues[3]) &&
          ((sortedSuitValues[2] == playerSuitValues[0] && playerCardValues[0] >= 8) || (sortedSuitValues[2] == playerSuitValues[1] && playerCardValues[1] >= 8))))
@@ -524,11 +520,21 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
           atomicCurrentSimulationNumber.store(i + 1, std::memory_order_relaxed);
         }
         
-        // Copy base deck and shuffle locally
-        std::copy(baseDeck, baseDeck + 52, newDeck.begin());
+        // Optimized deck copy with loop unrolling
+        for (int j = 0; j < 48; j += 4) {
+          newDeck[j] = baseDeck[j];
+          newDeck[j+1] = baseDeck[j+1];
+          newDeck[j+2] = baseDeck[j+2];
+          newDeck[j+3] = baseDeck[j+3];
+        }
+        newDeck[48] = baseDeck[48];
+        newDeck[49] = baseDeck[49];
+        newDeck[50] = baseDeck[50];
+        newDeck[51] = baseDeck[51];
+        
         std::shuffle(newDeck.begin(), newDeck.end(), local_rng);
         
-        // Inline the hand profit calculation for better performance
+        // Process simulation
         double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
         profits_private.push_back(handProfit);
       }
