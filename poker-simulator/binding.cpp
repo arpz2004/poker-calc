@@ -13,7 +13,8 @@ using namespace std;
 const int ROYAL_FLUSH = 36874;
 
 // The handranks lookup table- loaded from HANDRANKS.DAT.
-int HR[32487834];
+// Align to 64-byte boundary for better cache utilization
+__declspec(align(64)) int HR[32487834];
 bool HR_loaded = false;
 
 auto rng = std::default_random_engine{std::random_device{}()};
@@ -499,7 +500,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
   else
   {
     profits.reserve(sims > 0 ? sims : 1); // Pre-allocate to avoid reallocations
-#pragma omp parallel num_threads(omp_get_max_threads())
+#pragma omp parallel
     {
       std::vector<double> profits_private;
       int estimatedPerThread = (sims / omp_get_max_threads()) + 1;
@@ -512,7 +513,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
       // Pre-allocate deck array outside loop
       vector<int> newDeck(52);
       
-#pragma omp for schedule(static, 10000) nowait
+#pragma omp for schedule(dynamic) nowait
       for (int i = 0; i < numberOfSimulations; i++)
       {
         // Only update progress periodically to reduce contention
@@ -520,18 +521,8 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
           atomicCurrentSimulationNumber.store(i + 1, std::memory_order_relaxed);
         }
         
-        // Optimized deck copy with loop unrolling
-        for (int j = 0; j < 48; j += 4) {
-          newDeck[j] = baseDeck[j];
-          newDeck[j+1] = baseDeck[j+1];
-          newDeck[j+2] = baseDeck[j+2];
-          newDeck[j+3] = baseDeck[j+3];
-        }
-        newDeck[48] = baseDeck[48];
-        newDeck[49] = baseDeck[49];
-        newDeck[50] = baseDeck[50];
-        newDeck[51] = baseDeck[51];
-        
+        // Optimized deck copy using memcpy for better performance
+        std::copy(baseDeck, baseDeck + 52, newDeck.begin());
         std::shuffle(newDeck.begin(), newDeck.end(), local_rng);
         
         // Process simulation
