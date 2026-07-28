@@ -327,9 +327,9 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     // Post-river
     else if (
         // At least 10 good outs
-        // getGoodOuts(playerHand, communityCards, dealerCards[0], 10) >= 9 ||
-        // // At least 15 good outs if best case is push
-        getGoodOuts(playerHand, communityCards, dealerCards[0], 10, true) >= 10)
+        getGoodOuts(playerHand, communityCards, dealerCards[0], 10) >= 10 ||
+        // At least 15 good outs if best case is push
+        getGoodOuts(playerHand, communityCards, dealerCards[0], 15, true) >= 15)
     {
       playBet = 1;
     }
