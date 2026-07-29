@@ -49,12 +49,12 @@ export class AppComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.simulation = undefined;
       this.executionTimeDisplay = '';
-      const numberOfSimulations = +String(this.simulationForm.get('numberOfSimulations')?.value || '0').replace(/,/g, '');
-      const handsPerSession = +String(this.simulationForm.get('handsPerSession')?.value || '0').replace(/,/g, '');
-      const knownDealerCards = +this.simulationForm.get('knownDealerCards')?.value;
-      const knownFlopCards = +this.simulationForm.get('knownFlopCards')?.value;
-      const knownTurnRiverCards = +this.simulationForm.get('knownTurnRiverCards')?.value;
-      const excludeFishyPlays = this.simulationForm.get('excludeFishyPlays')?.value || false;
+      const numberOfSimulations = +String(this.simulationForm.get('numberOfSimulations')!.value || '0').replace(/,/g, '');
+      const handsPerSession = +String(this.simulationForm.get('handsPerSession')!.value || '0').replace(/,/g, '');
+      const knownDealerCards = +this.simulationForm.get('knownDealerCards')!.value;
+      const knownFlopCards = +this.simulationForm.get('knownFlopCards')!.value;
+      const knownTurnRiverCards = +this.simulationForm.get('knownTurnRiverCards')!.value;
+      const excludeFishyPlays = this.simulationForm.get('excludeFishyPlays')!.value || false;
       this.simulationStatus = {
         currentSimulationNumber: 0,
         numberOfSimulations: numberOfSimulations

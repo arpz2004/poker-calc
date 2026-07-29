@@ -629,7 +629,7 @@ describe('Basic strategy', () => {
     });
   });
 
-  describe('with fishy play filtering enabled (verification: no cards known)', () => {
+  describe('excluding fishy plays (should not affect strategy)', () => {
     it('should give 5 profit AA 4x preflop win, dealer qualifies, no blind pay', (done) => {
       binding.runUthSimulations(
         cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Ac', 'Ad', '4c', '4d']), 0, 1, 0, 0, 0, true,
@@ -1200,876 +1200,876 @@ describe('Basic strategy', () => {
 
 describe('One flop card and one dealer card known', () => {
   describe('Preflop 4x rules', () => {
-    describe('without fishy play filtering', () => {
+    describe('allowing fishy plays', () => {
       it('should give 5 profit AA 4x preflop win, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Ac', 'Ad', '4c', '4d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
-            playerCards: cnToInt(['Ac', 'Ad']),
-            dealerCards: cnToInt(['4c', '4d']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
+        binding.runUthSimulations(
+          cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Ac', 'Ad', '4c', '4d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
+              playerCards: cnToInt(['Ac', 'Ad']),
+              dealerCards: cnToInt(['4c', '4d']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 55 profit dealer card+ and 10+ 4x preflop win, dealer qualifies, straight flush blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ah', '8d', '9d', '6d', '7d', '2h', 'Td', '2c', '9s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ah', '8d', '9d', '6d', '7d']),
+              playerCards: cnToInt(['2h', 'Td']),
+              dealerCards: cnToInt(['2c', '9s']),
+              profit: 55,
+              edge: 55,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit dealer card+ and 10+, dealer pair, post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['2h', '8d', '9d', '6d', 'Kc', '3h', 'Td', '2c', '9s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['2h', '8d', '9d', '6d', 'Kc']),
+              playerCards: cnToInt(['3h', 'Td']),
+              dealerCards: cnToInt(['2c', '9s']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 3 profit dealer card+ and less than 10 2x postflop win, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ah', '8d', '9h', '6d', '7d', '2h', '9d', '2c', '8s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ah', '8d', '9h', '6d', '7d']),
+              playerCards: cnToInt(['2h', '9d']),
+              dealerCards: cnToInt(['2c', '8s']),
+              profit: 3,
+              edge: 3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit pocket pair of dealer cards 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['8c', '9s', 'Ac', 'Ah', '6s', '2h', '2s', '2c', 'Ad']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['8c', '9s', 'Ac', 'Ah', '6s']),
+              playerCards: cnToInt(['2h', '2s']),
+              dealerCards: cnToInt(['2c', 'Ad']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit pocket pair of dealer cards or better 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['8c', '9s', 'Ac', 'Ah', '6s', '3h', '3s', '2c', 'Ad']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['8c', '9s', 'Ac', 'Ah', '6s']),
+              playerCards: cnToInt(['3h', '3s']),
+              dealerCards: cnToInt(['2c', 'Ad']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit 77+ 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['3d', '7s', 'Qd', 'Js', 'As', '7h', '7c', 'Ks', '9s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['3d', '7s', 'Qd', 'Js', 'As']),
+              playerCards: cnToInt(['7h', '7c']),
+              dealerCards: cnToInt(['Ks', '9s']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit 77+ with dealer better pair post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Kd', '3d', '8c', 'Js', 'As', '7h', '7s', 'Ks', '9s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Kd', '3d', '8c', 'Js', 'As']),
+              playerCards: cnToInt(['7h', '7s']),
+              dealerCards: cnToInt(['Ks', '9s']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 6 profit 66- 2x postflop win, dealer qualifies, full house blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9h', '8d', '5c', '9c', '6h', '6c', '6d', '7s', '4h']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9h', '8d', '5c', '9c', '6h']),
+              playerCards: cnToInt(['6c', '6d']),
+              dealerCards: cnToInt(['7s', '4h']),
+              profit: 6,
+              edge: 6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 5 profit 66- 1x post-river win, dealer qualifies, full house blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9h', '8d', '5c', '9c', '6h', '6c', '6d', '9s', '4h']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9h', '8d', '5c', '9c', '6h']),
+              playerCards: cnToInt(['6c', '6d']),
+              dealerCards: cnToInt(['9s', '4h']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 4 profit hidden pair of 7s or better 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['7s', '5d', 'Tc', '6d', '9d', '7h', '4c', 'As', '4d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['7s', '5d', 'Tc', '6d', '9d']),
+              playerCards: cnToInt(['7h', '4c']),
+              dealerCards: cnToInt(['As', '4d']),
+              profit: 4,
+              edge: 4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 5 profit hidden pair of 7s with T+ kicker, dealer pair of 7s or better 4x preflop win, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['7s', '5d', 'Th', '6d', '9d', '7h', 'Tc', '7c', '4d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['7s', '5d', 'Th', '6d', '9d']),
+              playerCards: cnToInt(['7h', 'Tc']),
+              dealerCards: cnToInt(['7c', '4d']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit hidden pair of 7s with 9- kicker, dealer pair of 7s or better post-river fold, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['7s', '5d', 'Th', '6d', '9d', '7h', '2c', '7c', '4d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['7s', '5d', 'Th', '6d', '9d']),
+              playerCards: cnToInt(['7h', '2c']),
+              dealerCards: cnToInt(['7c', '4d']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 2 profit hidden pair of 6s or worse 2x postflop win, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['6s', '5d', 'Tc', '7d', '9d', '6h', '4c', 'As', '4d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['6s', '5d', 'Tc', '7d', '9d']),
+              playerCards: cnToInt(['6h', '4c']),
+              dealerCards: cnToInt(['As', '4d']),
+              profit: 2,
+              edge: 2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 4 profit any pair with flop card better than dealer 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['3c', '5d', 'Jd', '4c', 'Ks', '3h', '4c', '2s', 'Ts']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['3c', '5d', 'Jd', '4c', 'Ks']),
+              playerCards: cnToInt(['3h', '4c']),
+              dealerCards: cnToInt(['2s', 'Ts']),
+              profit: 4,
+              edge: 4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit three to a flush with hidden J+ post-river fold (4x with flop only), dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['4d', 'Kh', '6c', '8s', '3d', 'Jd', '2d', '8h', 'Td']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['4d', 'Kh', '6c', '8s', '3d']),
+              playerCards: cnToInt(['Jd', '2d']),
+              dealerCards: cnToInt(['8h', 'Td']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit three to a flush with hidden T- post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['4d', 'Kh', '6c', '8s', '3d', 'Td', '2d', '8h', 'Jd']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['4d', 'Kh', '6c', '8s', '3d']),
+              playerCards: cnToInt(['Td', '2d']),
+              dealerCards: cnToInt(['8h', 'Jd']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 5 profit Q8s+ vs J (x < D < Q) 4x preflop win, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ac', 'Ah', 'Qc', 'Js', '9d', 'Qh', '8h', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ac', 'Ah', 'Qc', 'Js', '9d']),
+              playerCards: cnToInt(['Qh', '8h']),
+              dealerCards: cnToInt(['Jd', '5s']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -4 profit Q8s+ vs J (x < D < Q) with dealer pair 2x postflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Jc', 'Ah', 'Qc', 'Js', '9d', 'Qh', '8h', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Jc', 'Ah', 'Qc', 'Js', '9d']),
+              playerCards: cnToInt(['Qh', '8h']),
+              dealerCards: cnToInt(['Jd', '5s']),
+              profit: -4,
+              edge: -4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -4 profit Q7s- vs J (x < D < Q) 2x postflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ac', 'Jh', 'Qc', 'Js', '9d', 'Qh', '7h', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ac', 'Jh', 'Qc', 'Js', '9d']),
+              playerCards: cnToInt(['Qh', '7h']),
+              dealerCards: cnToInt(['Jd', '5s']),
+              profit: -4,
+              edge: -4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit Q9s+ vs Q 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', '9s', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
+              playerCards: cnToInt(['Qs', '9s']),
+              dealerCards: cnToInt(['Qc', 'Kh']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -3 profit Q8s- vs Q 1x post-river loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', '8s', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
+              playerCards: cnToInt(['Qs', '8s']),
+              dealerCards: cnToInt(['Qc', 'Kh']),
+              profit: -3,
+              edge: -3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 6 profit QTo+ vs J (x < D < Q) 4x preflop win, dealer qualifies, straight blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Kh', 'Ah', 'Qc', 'Js', '9d', 'Qh', 'Tc', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Kh', 'Ah', 'Qc', 'Js', '9d']),
+              playerCards: cnToInt(['Qh', 'Tc']),
+              dealerCards: cnToInt(['Jd', '5s']),
+              profit: 6,
+              edge: 6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit QTo+ vs J (x < D < Q) with dealer pair 2x postflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d', 'Qh', 'Tc', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d']),
+              playerCards: cnToInt(['Qh', 'Tc']),
+              dealerCards: cnToInt(['Jd', '5s']),
+              profit: -4,
+              edge: -4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -4 profit Q9o- vs J (x < D < Q) 2x postflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d', 'Qh', '9c', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d']),
+              playerCards: cnToInt(['Qh', '9c']),
+              dealerCards: cnToInt(['Jd', '5s']),
+              profit: -4,
+              edge: -4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 5 profit QTo+ vs Q 4x preflop win, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', 'Th', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
+              playerCards: cnToInt(['Qs', 'Th']),
+              dealerCards: cnToInt(['Qc', 'Kh']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -3 profit Q9o- vs Q 1x post-river loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', '9c', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
+              playerCards: cnToInt(['Qs', '9c']),
+              dealerCards: cnToInt(['Qc', 'Kh']),
+              profit: -3,
+              edge: -3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 5 profit K6s+ vs Q (x < D < Q) 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9d', '3c', '8h', '2s', '4s', 'Kh', '6h', 'Qc', '7c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9d', '3c', '8h', '2s', '4s']),
+              playerCards: cnToInt(['Kh', '6h']),
+              dealerCards: cnToInt(['Qc', '7c']),
+              profit: 4,
+              edge: 4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit K6s+ vs Q (x < D < Q) with delaher pair post-river fold, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Qd', '3c', '8h', '2s', '4s', 'Kh', '6h', 'Qc', '7c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Qd', '3c', '8h', '2s', '4s']),
+              playerCards: cnToInt(['Kh', '6h']),
+              dealerCards: cnToInt(['Qc', '7c']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit K5s- vs J (x < D < Q) post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['8h', '2s', 'Qd', '4c', '8s', 'Kc', '5c', 'Qc', '3d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['8h', '2s', 'Qd', '4c', '8s']),
+              playerCards: cnToInt(['Kc', '5c']),
+              dealerCards: cnToInt(['Qc', '3d']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 6.5 profit K9s+ vs K 4x preflop win, dealer qualifies, flush blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['4h', '4d', 'Jd', '3s', '5d', 'Kd', '9d', 'Kh', 'As']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['4h', '4d', 'Jd', '3s', '5d']),
+              playerCards: cnToInt(['Kd', '9d']),
+              dealerCards: cnToInt(['Kh', 'As']),
+              profit: 6.5,
+              edge: 6.5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 2 profit K8s- vs K 2x postflop win, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ah', '6s', '8d', 'Qc', '7s', 'Ks', '8s', 'Kc', '4c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ah', '6s', '8d', 'Qc', '7s']),
+              playerCards: cnToInt(['Ks', '8s']),
+              dealerCards: cnToInt(['Kc', '4c']),
+              profit: 2,
+              edge: 2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit KTo+ vs Q (x < D < Q) 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['5h', 'Qh', '4s', '7s', '7d', 'Kc', 'Td', 'Qd', '7c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['5h', 'Qh', '4s', '7s', '7d']),
+              playerCards: cnToInt(['Kc', 'Td']),
+              dealerCards: cnToInt(['Qd', '7c']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit KTo+ vs Q (x < D < Q) with dealer pair post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Qc', 'Qh', '4s', '7s', '7d', 'Kc', 'Td', 'Qd', '7c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Qc', 'Qh', '4s', '7s', '7d']),
+              playerCards: cnToInt(['Kc', 'Td']),
+              dealerCards: cnToInt(['Qd', '7c']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -3 profit K9o- vs Q (x < D < Q) 1x post-river loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['8d', '5h', 'Js', '9h', '5c', 'Kh', '9d', 'Qc', 'Jh']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['8d', '5h', 'Js', '9h', '5c']),
+              playerCards: cnToInt(['Kh', '9d']),
+              dealerCards: cnToInt(['Qc', 'Jh']),
+              profit: -3,
+              edge: -3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 4 profit KTo+ vs K 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ah', '2s', '5d', '9c', 'Td', 'Kc', 'Ts', 'Kh', '4c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ah', '2s', '5d', '9c', 'Td']),
+              playerCards: cnToInt(['Kc', 'Ts']),
+              dealerCards: cnToInt(['Kh', '4c']),
+              profit: 4,
+              edge: 4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -3 profit K9o- vs K 1x post-riverloss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['6s', '5d', 'Jc', '2c', 'Jh', 'Kh', '9d', 'Kd', '5c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['6s', '5d', 'Jc', '2c', 'Jh']),
+              playerCards: cnToInt(['Kh', '9d']),
+              dealerCards: cnToInt(['Kd', '5c']),
+              profit: -3,
+              edge: -3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit A2s+ vs K (x < D < Q) 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ts', 'Ks', 'Kc', 'Jh', '6h', 'Ac', '2c', 'Kh', 'Kd']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ts', 'Ks', 'Kc', 'Jh', '6h']),
+              playerCards: cnToInt(['Ac', '2c']),
+              dealerCards: cnToInt(['Kh', 'Kd']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit A2s+ vs K (x < D < Q) post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Ks', 'Ts', 'Kc', 'Jh', '6h', 'Ac', '2c', 'Kh', 'Kd']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Ks', 'Ts', 'Kc', 'Jh', '6h']),
+              playerCards: cnToInt(['Ac', '2c']),
+              dealerCards: cnToInt(['Kh', 'Kd']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -3 profit K2s vs K (x < D < Q) 1x post-river loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9s', '9c', '6h', 'Qc', '7s', 'Kh', '2h', 'Ks', '6c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9s', '9c', '6h', 'Qc', '7s']),
+              playerCards: cnToInt(['Kh', '2h']),
+              dealerCards: cnToInt(['Ks', '6c']),
+              profit: -3,
+              edge: -3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -5 profit A9s+ vs A 4x preflop loss, dealer doesnt qualify, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['8c', '6s', 'Kd', 'Th', '5c', 'Ad', '9d', 'Ac', 'Qh']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['8c', '6s', 'Kd', 'Th', '5c']),
+              playerCards: cnToInt(['Ad', '9d']),
+              dealerCards: cnToInt(['Ac', 'Qh']),
+              profit: -5,
+              edge: -5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 3 profit A8s- vs A 1x post-river win, dealer qualifies, straight blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Qd', '9h', 'Js', 'Qs', 'Ts', 'Ah', '8h', 'Ad', '9c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Qd', '9h', 'Js', 'Qs', 'Ts']),
+              playerCards: cnToInt(['Ah', '8h']),
+              dealerCards: cnToInt(['Ad', '9c']),
+              profit: 3,
+              edge: 3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give 5 profit A7o+ vs K (x < D < Q) 4x preflop win, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['6s', 'Ah', '2s', 'Kc', 'Td', 'Ac', '7d', 'Ks', '5d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['6s', 'Ah', '2s', 'Kc', 'Td']),
+              playerCards: cnToInt(['Ac', '7d']),
+              dealerCards: cnToInt(['Ks', '5d']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -4 profit A7o+ vs K (x < D < Q) with dealer pair 2x postflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Kd', 'Ah', '2s', 'Kc', 'Td', 'Ac', '7d', 'Ks', '5d']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Kd', 'Ah', '2s', 'Kc', 'Td']),
+              playerCards: cnToInt(['Ac', '7d']),
+              dealerCards: cnToInt(['Ks', '5d']),
+              profit: -4,
+              edge: -4,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -3 profit A6o- vs K (x < D < Q) 1x post-river loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['5s', 'Kd', 'Th', 'Jh', 'Qh', 'As', '6h', 'Kh', '5h']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['5s', 'Kd', 'Th', 'Jh', 'Qh']),
+              playerCards: cnToInt(['As', '6h']),
+              dealerCards: cnToInt(['Kh', '5h']),
+              profit: -3,
+              edge: -3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -6 profit ATo+ vs A 4x preflop loss, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['Qd', '9c', '4d', '5d', '7d', 'Ac', 'Td', 'Ad', '5c']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['Qd', '9c', '4d', '5d', '7d']),
+              playerCards: cnToInt(['Ac', 'Td']),
+              dealerCards: cnToInt(['Ad', '5c']),
+              profit: -6,
+              edge: -6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
+
+      it('should give -2 profit A9o- vs A 1x post-river fold, dealer qualifies, no blind pay', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['3c', '6d', '2s', '8c', '7d', 'As', '9h', 'Ac', '8h']), 0, 1, 1, 1, 0, false,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['3c', '6d', '2s', '8c', '7d']),
+              playerCards: cnToInt(['As', '9h']),
+              dealerCards: cnToInt(['Ac', '8h']),
+              profit: -2,
+              edge: -2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
     });
 
-    it('should give 55 profit dealer card+ and 10+ 4x preflop win, dealer qualifies, straight flush blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ah', '8d', '9d', '6d', '7d', '2h', 'Td', '2c', '9s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ah', '8d', '9d', '6d', '7d']),
-            playerCards: cnToInt(['2h', 'Td']),
-            dealerCards: cnToInt(['2c', '9s']),
-            profit: 55,
-            edge: 55,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
+    describe('excluding fishy plays', () => {
+      it('should give 3 profit 9-high hand when excluding fishy plays is enabled', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9c', 'Th', '2c', '9d', 'Kc', '9h', '8h', '4c', '4d']), 0, 1, 1, 1, 0, true,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
+              playerCards: cnToInt(['9h', '8h']),
+              dealerCards: cnToInt(['4c', '4d']),
+              profit: 3,
+              edge: 3,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
 
-    it('should give -2 profit dealer card+ and 10+, dealer pair, post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['2h', '8d', '9d', '6d', 'Kc', '3h', 'Td', '2c', '9s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['2h', '8d', '9d', '6d', 'Kc']),
-            playerCards: cnToInt(['3h', 'Td']),
-            dealerCards: cnToInt(['2c', '9s']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
+      it('should give 2 profit Ten high hand when excluding fishy plays is enabled', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Th', '9h', '4c', '4d']), 0, 1, 1, 1, 0, true,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
+              playerCards: cnToInt(['Th', '9h']),
+              dealerCards: cnToInt(['4c', '4d']),
+              profit: 2,
+              edge: 2,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
 
-    it('should give 3 profit dealer card+ and less than 10 2x postflop win, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ah', '8d', '9h', '6d', '7d', '2h', '9d', '2c', '8s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ah', '8d', '9h', '6d', '7d']),
-            playerCards: cnToInt(['2h', '9d']),
-            dealerCards: cnToInt(['2c', '8s']),
-            profit: 3,
-            edge: 3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
+      it('should give 5 profit Jack high hand when excluding fishy plays is enabled', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Jh', 'Th', '4c', '4d']), 0, 1, 1, 1, 0, true,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
+              playerCards: cnToInt(['Jh', 'Th']),
+              dealerCards: cnToInt(['4c', '4d']),
+              profit: 5,
+              edge: 5,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
 
-    it('should give -6 profit pocket pair of dealer cards 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['8c', '9s', 'Ac', 'Ah', '6s', '2h', '2s', '2c', 'Ad']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['8c', '9s', 'Ac', 'Ah', '6s']),
-            playerCards: cnToInt(['2h', '2s']),
-            dealerCards: cnToInt(['2c', 'Ad']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
+      it('should give 6 profit pocket pair when excluding fishy plays is enabled', (done) => {
+        binding.runUthSimulations(
+          cnToInt(['9c', 'Th', '2c', '9d', 'Kc', '2h', '2d', '4c', '4d']), 0, 1, 1, 1, 0, true,
+          (profit, edge, stDev, cards) => {
+            expect({ profit, edge, stDev, ...cards }).toEqual({
+              communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
+              playerCards: cnToInt(['2h', '2d']),
+              dealerCards: cnToInt(['4c', '4d']),
+              profit: 6,
+              edge: 6,
+              stDev: 0
+            });
+            done();
+          }
+        );
+      });
     });
-
-    it('should give -6 profit pocket pair of dealer cards or better 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['8c', '9s', 'Ac', 'Ah', '6s', '3h', '3s', '2c', 'Ad']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['8c', '9s', 'Ac', 'Ah', '6s']),
-            playerCards: cnToInt(['3h', '3s']),
-            dealerCards: cnToInt(['2c', 'Ad']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -6 profit 77+ 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['3d', '7s', 'Qd', 'Js', 'As', '7h', '7c', 'Ks', '9s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['3d', '7s', 'Qd', 'Js', 'As']),
-            playerCards: cnToInt(['7h', '7c']),
-            dealerCards: cnToInt(['Ks', '9s']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit 77+ with dealer better pair post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Kd', '3d', '8c', 'Js', 'As', '7h', '7s', 'Ks', '9s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Kd', '3d', '8c', 'Js', 'As']),
-            playerCards: cnToInt(['7h', '7s']),
-            dealerCards: cnToInt(['Ks', '9s']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 6 profit 66- 2x postflop win, dealer qualifies, full house blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9h', '8d', '5c', '9c', '6h', '6c', '6d', '7s', '4h']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9h', '8d', '5c', '9c', '6h']),
-            playerCards: cnToInt(['6c', '6d']),
-            dealerCards: cnToInt(['7s', '4h']),
-            profit: 6,
-            edge: 6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit 66- 1x post-river win, dealer qualifies, full house blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9h', '8d', '5c', '9c', '6h', '6c', '6d', '9s', '4h']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9h', '8d', '5c', '9c', '6h']),
-            playerCards: cnToInt(['6c', '6d']),
-            dealerCards: cnToInt(['9s', '4h']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 4 profit hidden pair of 7s or better 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['7s', '5d', 'Tc', '6d', '9d', '7h', '4c', 'As', '4d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['7s', '5d', 'Tc', '6d', '9d']),
-            playerCards: cnToInt(['7h', '4c']),
-            dealerCards: cnToInt(['As', '4d']),
-            profit: 4,
-            edge: 4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit hidden pair of 7s with T+ kicker, dealer pair of 7s or better 4x preflop win, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['7s', '5d', 'Th', '6d', '9d', '7h', 'Tc', '7c', '4d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['7s', '5d', 'Th', '6d', '9d']),
-            playerCards: cnToInt(['7h', 'Tc']),
-            dealerCards: cnToInt(['7c', '4d']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit hidden pair of 7s with 9- kicker, dealer pair of 7s or better post-river fold, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['7s', '5d', 'Th', '6d', '9d', '7h', '2c', '7c', '4d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['7s', '5d', 'Th', '6d', '9d']),
-            playerCards: cnToInt(['7h', '2c']),
-            dealerCards: cnToInt(['7c', '4d']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 2 profit hidden pair of 6s or worse 2x postflop win, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['6s', '5d', 'Tc', '7d', '9d', '6h', '4c', 'As', '4d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['6s', '5d', 'Tc', '7d', '9d']),
-            playerCards: cnToInt(['6h', '4c']),
-            dealerCards: cnToInt(['As', '4d']),
-            profit: 2,
-            edge: 2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 4 profit any pair with flop card better than dealer 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['3c', '5d', 'Jd', '4c', 'Ks', '3h', '4c', '2s', 'Ts']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['3c', '5d', 'Jd', '4c', 'Ks']),
-            playerCards: cnToInt(['3h', '4c']),
-            dealerCards: cnToInt(['2s', 'Ts']),
-            profit: 4,
-            edge: 4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit three to a flush with hidden J+ post-river fold (4x with flop only), dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['4d', 'Kh', '6c', '8s', '3d', 'Jd', '2d', '8h', 'Td']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['4d', 'Kh', '6c', '8s', '3d']),
-            playerCards: cnToInt(['Jd', '2d']),
-            dealerCards: cnToInt(['8h', 'Td']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit three to a flush with hidden T- post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['4d', 'Kh', '6c', '8s', '3d', 'Td', '2d', '8h', 'Jd']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['4d', 'Kh', '6c', '8s', '3d']),
-            playerCards: cnToInt(['Td', '2d']),
-            dealerCards: cnToInt(['8h', 'Jd']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit Q8s+ vs J (x < D < Q) 4x preflop win, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ac', 'Ah', 'Qc', 'Js', '9d', 'Qh', '8h', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ac', 'Ah', 'Qc', 'Js', '9d']),
-            playerCards: cnToInt(['Qh', '8h']),
-            dealerCards: cnToInt(['Jd', '5s']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -4 profit Q8s+ vs J (x < D < Q) with dealer pair 2x postflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Jc', 'Ah', 'Qc', 'Js', '9d', 'Qh', '8h', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Jc', 'Ah', 'Qc', 'Js', '9d']),
-            playerCards: cnToInt(['Qh', '8h']),
-            dealerCards: cnToInt(['Jd', '5s']),
-            profit: -4,
-            edge: -4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -4 profit Q7s- vs J (x < D < Q) 2x postflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ac', 'Jh', 'Qc', 'Js', '9d', 'Qh', '7h', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ac', 'Jh', 'Qc', 'Js', '9d']),
-            playerCards: cnToInt(['Qh', '7h']),
-            dealerCards: cnToInt(['Jd', '5s']),
-            profit: -4,
-            edge: -4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -6 profit Q9s+ vs Q 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', '9s', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
-            playerCards: cnToInt(['Qs', '9s']),
-            dealerCards: cnToInt(['Qc', 'Kh']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -3 profit Q8s- vs Q 1x post-river loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', '8s', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
-            playerCards: cnToInt(['Qs', '8s']),
-            dealerCards: cnToInt(['Qc', 'Kh']),
-            profit: -3,
-            edge: -3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 6 profit QTo+ vs J (x < D < Q) 4x preflop win, dealer qualifies, straight blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Kh', 'Ah', 'Qc', 'Js', '9d', 'Qh', 'Tc', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Kh', 'Ah', 'Qc', 'Js', '9d']),
-            playerCards: cnToInt(['Qh', 'Tc']),
-            dealerCards: cnToInt(['Jd', '5s']),
-            profit: 6,
-            edge: 6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -6 profit QTo+ vs J (x < D < Q) with dealer pair 2x postflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d', 'Qh', 'Tc', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d']),
-            playerCards: cnToInt(['Qh', 'Tc']),
-            dealerCards: cnToInt(['Jd', '5s']),
-            profit: -4,
-            edge: -4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -4 profit Q9o- vs J (x < D < Q) 2x postflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d', 'Qh', '9c', 'Jd', '5s']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Jh', 'Ah', 'Qc', 'Js', '9d']),
-            playerCards: cnToInt(['Qh', '9c']),
-            dealerCards: cnToInt(['Jd', '5s']),
-            profit: -4,
-            edge: -4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit QTo+ vs Q 4x preflop win, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', 'Th', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
-            playerCards: cnToInt(['Qs', 'Th']),
-            dealerCards: cnToInt(['Qc', 'Kh']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -3 profit Q9o- vs Q 1x post-river loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Tc', '4c', '3d', '5d', '5s', 'Qs', '9c', 'Qc', 'Kh']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Tc', '4c', '3d', '5d', '5s']),
-            playerCards: cnToInt(['Qs', '9c']),
-            dealerCards: cnToInt(['Qc', 'Kh']),
-            profit: -3,
-            edge: -3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit K6s+ vs Q (x < D < Q) 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9d', '3c', '8h', '2s', '4s', 'Kh', '6h', 'Qc', '7c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9d', '3c', '8h', '2s', '4s']),
-            playerCards: cnToInt(['Kh', '6h']),
-            dealerCards: cnToInt(['Qc', '7c']),
-            profit: 4,
-            edge: 4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit K6s+ vs Q (x < D < Q) with delaher pair post-river fold, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Qd', '3c', '8h', '2s', '4s', 'Kh', '6h', 'Qc', '7c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Qd', '3c', '8h', '2s', '4s']),
-            playerCards: cnToInt(['Kh', '6h']),
-            dealerCards: cnToInt(['Qc', '7c']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit K5s- vs J (x < D < Q) post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['8h', '2s', 'Qd', '4c', '8s', 'Kc', '5c', 'Qc', '3d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['8h', '2s', 'Qd', '4c', '8s']),
-            playerCards: cnToInt(['Kc', '5c']),
-            dealerCards: cnToInt(['Qc', '3d']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 6.5 profit K9s+ vs K 4x preflop win, dealer qualifies, flush blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['4h', '4d', 'Jd', '3s', '5d', 'Kd', '9d', 'Kh', 'As']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['4h', '4d', 'Jd', '3s', '5d']),
-            playerCards: cnToInt(['Kd', '9d']),
-            dealerCards: cnToInt(['Kh', 'As']),
-            profit: 6.5,
-            edge: 6.5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 2 profit K8s- vs K 2x postflop win, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ah', '6s', '8d', 'Qc', '7s', 'Ks', '8s', 'Kc', '4c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ah', '6s', '8d', 'Qc', '7s']),
-            playerCards: cnToInt(['Ks', '8s']),
-            dealerCards: cnToInt(['Kc', '4c']),
-            profit: 2,
-            edge: 2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -6 profit KTo+ vs Q (x < D < Q) 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['5h', 'Qh', '4s', '7s', '7d', 'Kc', 'Td', 'Qd', '7c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['5h', 'Qh', '4s', '7s', '7d']),
-            playerCards: cnToInt(['Kc', 'Td']),
-            dealerCards: cnToInt(['Qd', '7c']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit KTo+ vs Q (x < D < Q) with dealer pair post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Qc', 'Qh', '4s', '7s', '7d', 'Kc', 'Td', 'Qd', '7c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Qc', 'Qh', '4s', '7s', '7d']),
-            playerCards: cnToInt(['Kc', 'Td']),
-            dealerCards: cnToInt(['Qd', '7c']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -3 profit K9o- vs Q (x < D < Q) 1x post-river loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['8d', '5h', 'Js', '9h', '5c', 'Kh', '9d', 'Qc', 'Jh']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['8d', '5h', 'Js', '9h', '5c']),
-            playerCards: cnToInt(['Kh', '9d']),
-            dealerCards: cnToInt(['Qc', 'Jh']),
-            profit: -3,
-            edge: -3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 4 profit KTo+ vs K 4x preflop win, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ah', '2s', '5d', '9c', 'Td', 'Kc', 'Ts', 'Kh', '4c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ah', '2s', '5d', '9c', 'Td']),
-            playerCards: cnToInt(['Kc', 'Ts']),
-            dealerCards: cnToInt(['Kh', '4c']),
-            profit: 4,
-            edge: 4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -3 profit K9o- vs K 1x post-riverloss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['6s', '5d', 'Jc', '2c', 'Jh', 'Kh', '9d', 'Kd', '5c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['6s', '5d', 'Jc', '2c', 'Jh']),
-            playerCards: cnToInt(['Kh', '9d']),
-            dealerCards: cnToInt(['Kd', '5c']),
-            profit: -3,
-            edge: -3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -6 profit A2s+ vs K (x < D < Q) 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ts', 'Ks', 'Kc', 'Jh', '6h', 'Ac', '2c', 'Kh', 'Kd']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ts', 'Ks', 'Kc', 'Jh', '6h']),
-            playerCards: cnToInt(['Ac', '2c']),
-            dealerCards: cnToInt(['Kh', 'Kd']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit A2s+ vs K (x < D < Q) post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Ks', 'Ts', 'Kc', 'Jh', '6h', 'Ac', '2c', 'Kh', 'Kd']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Ks', 'Ts', 'Kc', 'Jh', '6h']),
-            playerCards: cnToInt(['Ac', '2c']),
-            dealerCards: cnToInt(['Kh', 'Kd']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -3 profit K2s vs K (x < D < Q) 1x post-river loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9s', '9c', '6h', 'Qc', '7s', 'Kh', '2h', 'Ks', '6c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9s', '9c', '6h', 'Qc', '7s']),
-            playerCards: cnToInt(['Kh', '2h']),
-            dealerCards: cnToInt(['Ks', '6c']),
-            profit: -3,
-            edge: -3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -5 profit A9s+ vs A 4x preflop loss, dealer doesnt qualify, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['8c', '6s', 'Kd', 'Th', '5c', 'Ad', '9d', 'Ac', 'Qh']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['8c', '6s', 'Kd', 'Th', '5c']),
-            playerCards: cnToInt(['Ad', '9d']),
-            dealerCards: cnToInt(['Ac', 'Qh']),
-            profit: -5,
-            edge: -5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 3 profit A8s- vs A 1x post-river win, dealer qualifies, straight blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Qd', '9h', 'Js', 'Qs', 'Ts', 'Ah', '8h', 'Ad', '9c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Qd', '9h', 'Js', 'Qs', 'Ts']),
-            playerCards: cnToInt(['Ah', '8h']),
-            dealerCards: cnToInt(['Ad', '9c']),
-            profit: 3,
-            edge: 3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit A7o+ vs K (x < D < Q) 4x preflop win, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['6s', 'Ah', '2s', 'Kc', 'Td', 'Ac', '7d', 'Ks', '5d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['6s', 'Ah', '2s', 'Kc', 'Td']),
-            playerCards: cnToInt(['Ac', '7d']),
-            dealerCards: cnToInt(['Ks', '5d']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -4 profit A7o+ vs K (x < D < Q) with dealer pair 2x postflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Kd', 'Ah', '2s', 'Kc', 'Td', 'Ac', '7d', 'Ks', '5d']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Kd', 'Ah', '2s', 'Kc', 'Td']),
-            playerCards: cnToInt(['Ac', '7d']),
-            dealerCards: cnToInt(['Ks', '5d']),
-            profit: -4,
-            edge: -4,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -3 profit A6o- vs K (x < D < Q) 1x post-river loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['5s', 'Kd', 'Th', 'Jh', 'Qh', 'As', '6h', 'Kh', '5h']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['5s', 'Kd', 'Th', 'Jh', 'Qh']),
-            playerCards: cnToInt(['As', '6h']),
-            dealerCards: cnToInt(['Kh', '5h']),
-            profit: -3,
-            edge: -3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -6 profit ATo+ vs A 4x preflop loss, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['Qd', '9c', '4d', '5d', '7d', 'Ac', 'Td', 'Ad', '5c']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['Qd', '9c', '4d', '5d', '7d']),
-            playerCards: cnToInt(['Ac', 'Td']),
-            dealerCards: cnToInt(['Ad', '5c']),
-            profit: -6,
-            edge: -6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give -2 profit A9o- vs A 1x post-river fold, dealer qualifies, no blind pay', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['3c', '6d', '2s', '8c', '7d', 'As', '9h', 'Ac', '8h']), 0, 1, 1, 1, 0, false,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['3c', '6d', '2s', '8c', '7d']),
-            playerCards: cnToInt(['As', '9h']),
-            dealerCards: cnToInt(['Ac', '8h']),
-            profit: -2,
-            edge: -2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-  });
-
-  describe('with fishy play filtering', () => {
-    it('should give 3 profit 9-high hand when fishy play filtering is enabled', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9c', 'Th', '2c', '9d', 'Kc', '9h', '8h', '4c', '4d']), 0, 1, 1, 1, 0, true,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
-            playerCards: cnToInt(['9h', '8h']),
-            dealerCards: cnToInt(['4c', '4d']),
-            profit: 3,
-            edge: 3,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 2 profit Ten high hand when fishy play filtering is enabled', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Th', '9h', '4c', '4d']), 0, 1, 1, 1, 0, true,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
-            playerCards: cnToInt(['Th', '9h']),
-            dealerCards: cnToInt(['4c', '4d']),
-            profit: 2,
-            edge: 2,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 5 profit Jack high hand when fishy play filtering is enabled', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9c', 'Th', '2c', '9d', 'Kc', 'Jh', 'Th', '4c', '4d']), 0, 1, 1, 1, 0, true,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
-            playerCards: cnToInt(['Jh', 'Th']),
-            dealerCards: cnToInt(['4c', '4d']),
-            profit: 5,
-            edge: 5,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-
-    it('should give 6 profit pocket pair when fishy play filtering is enabled', (done) => {
-      binding.runUthSimulations(
-        cnToInt(['9c', 'Th', '2c', '9d', 'Kc', '2h', '2d', '4c', '4d']), 0, 1, 1, 1, 0, true,
-        (profit, edge, stDev, cards) => {
-          expect({ profit, edge, stDev, ...cards }).toEqual({
-            communityCards: cnToInt(['9c', 'Th', '2c', '9d', 'Kc']),
-            playerCards: cnToInt(['2h', '2d']),
-            dealerCards: cnToInt(['4c', '4d']),
-            profit: 6,
-            edge: 6,
-            stDev: 0
-          });
-          done();
-        }
-      );
-    });
-  });
   });
 
   describe('Postflop 2x rules', () => {
