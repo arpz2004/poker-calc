@@ -43,18 +43,19 @@ const uthSimulationResponse = (res) => (profit, edge, stDev, cards, error) => {
   }
 }
 
-async function runUthSimulations(res, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards) {
-  const data = await binding.runUthSimulations([], numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, uthSimulationResponse(res));
+async function runUthSimulations(res, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays) {
+  const data = await binding.runUthSimulations([], numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays, uthSimulationResponse(res));
   return data;
 }
 
 app.post("/api/runUthSimulations", (req, res, next) => {
-  const { numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards } = req.body;
+  const { numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays } = req.body;
   // Use default values if not provided
   const dealerCards = knownDealerCards !== undefined ? knownDealerCards : 0;
   const flopCards = knownFlopCards !== undefined ? knownFlopCards : 0;
   const turnRiverCards = knownTurnRiverCards !== undefined ? knownTurnRiverCards : 0;
-  runUthSimulations(res, numberOfSimulations, handsPerSession, dealerCards, flopCards, turnRiverCards);
+  const excludeFishy = excludeFishyPlays !== undefined ? excludeFishyPlays : false;
+  runUthSimulations(res, numberOfSimulations, handsPerSession, dealerCards, flopCards, turnRiverCards, excludeFishy);
 });
 
 module.exports = app;

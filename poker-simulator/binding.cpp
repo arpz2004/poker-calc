@@ -4,6 +4,7 @@
 #include <numeric>
 #include <atomic>
 #include "omp.h"
+#include <cstdint>
 
 using namespace Napi;
 using namespace std;
@@ -20,9 +21,9 @@ bool HR_loaded = false;
 
 
 auto rng = std::default_random_engine{std::random_device{}()};
-int currentSimulationNumber;
-int numberOfSimulations;
-std::atomic<int> atomicCurrentSimulationNumber{0}; // Thread-safe progress counter
+int64_t currentSimulationNumber;
+int64_t numberOfSimulations;
+std::atomic<int64_t> atomicCurrentSimulationNumber{0}; // Thread-safe progress counter
 
 
 
@@ -339,7 +340,7 @@ int getGoodOuts(vector<int> hand, vector<int> communityCards, int knownDealerCar
   return goodOuts;
 }
 
-int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> dealerCards, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> dealerCards, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards, bool excludeFishyPlays)
 {
   int playBet = 0;
   vector<int> flop;
@@ -428,7 +429,19 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
   else if (knownDealerCards == 1 && knownFlopCards == 1 && knownTurnRiverCards == 0)
   {
     // Preflop
-    if (
+    bool allow4xBet = true;
+    if (excludeFishyPlays) {
+      if (playerCardValues[0] != playerCardValues[1]) {
+        int maxCard = (playerCardValues[0] > playerCardValues[1]) ? playerCardValues[0] : playerCardValues[1];
+        // Ten high or lower means max card is 8 or less (Ten=8 in internal representation, so values 0-8 are 2-through-Ten)
+        if (maxCard <= 8) {
+          allow4xBet = false; // Don't allow 4x bet for fishy play
+        }
+      }
+      // If it's a pocket pair or higher than Ten high, allow 4x bet
+    }
+    
+    if (allow4xBet && (
         // Flop card gives you three of a kind
         (playerCardValues[0] == playerCardValues[1] && playerCardValues[0] == flopCardValues[0]) ||
         // Pair of dealer cards or better
@@ -457,7 +470,7 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
           (playerCardValues[1] == 12 && dealerCardValues[0] < playerCardValues[1] && (playerCardValues[0] >= 5 || (playerHand[0] - playerHand[1]) % 4 == 0)) ||
           // H9s+ if dealer card is H = A, K, Q
           (playerCardValues[0] >= 10 && dealerCardValues[0] == playerCardValues[0] && playerCardValues[1] >= 7 && (playerHand[0] - playerHand[1]) % 4 == 0) ||
-          (playerCardValues[1] >= 10 && dealerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 7 && (playerHand[0] - playerHand[1]) % 4 == 0))))
+          (playerCardValues[1] >= 10 && dealerCardValues[0] == playerCardValues[1] && playerCardValues[0] >= 7 && (playerHand[0] - playerHand[1]) % 4 == 0)))))
     {
       playBet = 4;
     }
@@ -489,22 +502,37 @@ int getPlayBet(vector<int> playerHand, vector<int> communityCards, vector<int> d
     knownDealerHand.insert(knownDealerHand.end(), dealerCards.begin(), dealerCards.end());
     knownDealerHand.push_back(flop[0]);
     knownDealerHand.insert(knownDealerHand.end(), communityCards.begin() + 3, communityCards.begin() + 5);
-    vector<int> dealerPostRiverHand;
-    dealerPostRiverHand.insert(dealerPostRiverHand.end(), dealerCards.begin(), dealerCards.end());
-    dealerPostRiverHand.insert(dealerPostRiverHand.end(), communityCards.begin(), communityCards.end());
-    if (FiveCardLookupFast(knownPlayerHand.data()) > FiveCardLookupFast(knownDealerHand.data()))
+    
+    bool allow4xBet = true;
+    if (excludeFishyPlays) {
+      if (playerCardValues[0] != playerCardValues[1]) {
+        int maxCard = (playerCardValues[0] > playerCardValues[1]) ? playerCardValues[0] : playerCardValues[1];
+        // Ten high or lower means max card is 8 or less (Ten=8 in internal representation, so values 0-8 are 2-through-Ten)
+        if (maxCard <= 8) {
+          allow4xBet = false; // Don't allow 4x bet for fishy play
+        }
+      }
+      // If it's a pocket pair or higher than Ten high, allow 4x bet
+    }
+    
+    if (allow4xBet && FiveCardLookupFast(knownPlayerHand.data()) > FiveCardLookupFast(knownDealerHand.data()))
     {
       playBet = 4;
     }
-    else if (LookupHandFast(postRiverHand.data()) >= LookupHandFast(dealerPostRiverHand.data()))
-    {
-      playBet = 2;
+    else {
+      vector<int> dealerPostRiverHand;
+      dealerPostRiverHand.insert(dealerPostRiverHand.end(), dealerCards.begin(), dealerCards.end());
+      dealerPostRiverHand.insert(dealerPostRiverHand.end(), communityCards.begin(), communityCards.end());
+      if (LookupHandFast(postRiverHand.data()) >= LookupHandFast(dealerPostRiverHand.data()))
+      {
+        playBet = 2;
+      }
     }
   }
   return playBet;
 }
 
-double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopCards, int knownTurnRiverCount = 0)
+double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopCards, int knownTurnRiverCount = 0, bool excludeFishyPlays = false)
 {
   // Optimized to reduce vector allocations by using manual array copying
   int communityCards[5];
@@ -530,7 +558,7 @@ double calculateProfitUTH(vector<int> deck, int knownDealerCards, int knownFlopC
   vector<int> dealerCardsVec(dealerCards, dealerCards + 2);
   
   // Use standard strategy function
-  int playBet = getPlayBet(playerCardsVec, communityCardsVec, dealerCardsVec, knownDealerCards, knownFlopCards, knownTurnRiverCount);
+  int playBet = getPlayBet(playerCardsVec, communityCardsVec, dealerCardsVec, knownDealerCards, knownFlopCards, knownTurnRiverCount, excludeFishyPlays);
   double profit = 0;
   int playerHandRank = LookupHandFast(playerHand);
   int dealerHandRank = LookupHandFast(dealerHand);
@@ -570,7 +598,7 @@ struct result
   double stDev;
   string error;
 };
-result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+result runUthSimulations(vector<int> deck, int64_t sims, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards, bool excludeFishyPlays)
 {
   numberOfSimulations = sims;
   atomicCurrentSimulationNumber.store(0, std::memory_order_relaxed); // Reset progress counter
@@ -579,23 +607,46 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
   if (!loadHandRanks())
     return result{{}, {}, {}, 0, 0, 0, "HandRanks.dat not found"};
   
-  vector<double> profits;
+  // Incremental statistics calculation to handle large simulations without memory issues
+  double totalProfit = 0.0;
+  double totalProfitSquared = 0.0;
+  int64_t simulationCount = 0;
+  
+  // For grouped statistics (limited to avoid memory issues)
+  const int maxGroupedProfits = 1000000; // Limit to 1M groups to prevent memory issues
   vector<double> groupedProfits;
+  groupedProfits.reserve(maxGroupedProfits);
+  int currentGroupProfit = 0;
+  int simulationsInCurrentGroup = 0;
+  
   if (deck.size() > 0)
   {
     numberOfSimulations = 1;
-    profits.reserve(1);
-    double handProfit = calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
-    profits.push_back(handProfit);
+    double handProfit = calculateProfitUTH(deck, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays);
+    
+    totalProfit = handProfit;
+    totalProfitSquared = handProfit * handProfit;
+    simulationCount = 1;
+    groupedProfits.push_back(handProfit);
+    
+    // Update final progress
+    atomicCurrentSimulationNumber.store(numberOfSimulations, std::memory_order_relaxed);
   }
   else
   {
-    profits.reserve(sims > 0 ? sims : 1); // Pre-allocate to avoid reallocations
 #pragma omp parallel
     {
-      std::vector<double> profits_private;
-      int estimatedPerThread = (sims / omp_get_max_threads()) + 1;
-      profits_private.reserve(estimatedPerThread > 0 ? estimatedPerThread : 1); // Pre-allocate per thread
+      // Thread-local variables for incremental statistics
+      double localTotalProfit = 0.0;
+      double localTotalProfitSquared = 0.0;
+      int64_t localSimulationCount = 0;
+      
+      // Thread-local grouped profits (limited size)
+      const int localMaxGroups = 10000; // Local limit per thread
+      vector<double> localGroupedProfits;
+      localGroupedProfits.reserve(localMaxGroups);
+      int localCurrentGroupProfit = 0;
+      int localSimulationsInCurrentGroup = 0;
       
       // Thread-local RNG to avoid contention
       std::random_device rd;
@@ -605,7 +656,7 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
       vector<int> newDeck(52);
       
 #pragma omp for schedule(dynamic) nowait
-      for (int i = 0; i < numberOfSimulations; i++)
+      for (int64_t i = 0; i < numberOfSimulations; i++)
       {
         // Only update progress periodically to reduce contention (less frequent for better performance)
         if (i % 2000 == 0) {
@@ -623,26 +674,59 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
         }
         
         // Process simulation
-        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards);
-        profits_private.push_back(handProfit);
+        double handProfit = calculateProfitUTH(newDeck, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays);
+        
+        // Incremental statistics calculation
+        localTotalProfit += handProfit;
+        localTotalProfitSquared += handProfit * handProfit;
+        localSimulationCount++;
+        
+        // Incremental grouped profits (limited to prevent memory issues)
+        localCurrentGroupProfit += handProfit;
+        localSimulationsInCurrentGroup++;
+        
+        if (localSimulationsInCurrentGroup >= handsPerSession) {
+          if (localGroupedProfits.size() < localMaxGroups) {
+            localGroupedProfits.push_back(localCurrentGroupProfit);
+          }
+          localCurrentGroupProfit = 0;
+          localSimulationsInCurrentGroup = 0;
+        }
       }
+      
 #pragma omp critical
-      profits.insert(profits.end(), profits_private.begin(), profits_private.end());
+      {
+        totalProfit += localTotalProfit;
+        totalProfitSquared += localTotalProfitSquared;
+        simulationCount += localSimulationCount;
+        
+        // Merge grouped profits (limited to prevent memory overflow)
+        for (double groupProfit : localGroupedProfits) {
+          if (groupedProfits.size() < maxGroupedProfits) {
+            groupedProfits.push_back(groupProfit);
+          }
+        }
+      }
     }
     
     // Update final progress
     atomicCurrentSimulationNumber.store(numberOfSimulations, std::memory_order_relaxed);
   }
-  for (int i = 0; (i + 1) * handsPerSession <= profits.size(); i++)
-  {
-    double groupedProfit = accumulate(profits.begin() + i * handsPerSession, profits.begin() + (i + 1) * handsPerSession, 0.0);
-    groupedProfits.push_back(groupedProfit);
-  }
-  double profit = accumulate(profits.begin(), profits.end(), 0.0);
-  double edge = profit / profits.size();
+  
+  // Calculate final statistics from incremental data
+  double profit = totalProfit;
+  double edge = simulationCount > 0 ? profit / simulationCount : 0.0;
   double stDev = 0.0;
-  if (groupedProfits.size())
-  {
+  
+  // Calculate standard deviation using online algorithm
+  if (simulationCount > 0) {
+    double mean = edge;
+    double variance = (totalProfitSquared / simulationCount) - (mean * mean);
+    stDev = sqrt(variance);
+  }
+  
+  // Use grouped profits for more accurate stDev if available
+  if (groupedProfits.size() > 0) {
     double groupedProfit = accumulate(groupedProfits.begin(), groupedProfits.end(), 0.0);
     double groupedEdge = groupedProfit / groupedProfits.size();
 
@@ -673,7 +757,8 @@ result runUthSimulations(vector<int> deck, int sims, int handsPerSession, int kn
       dealerCards,
       profit,
       edge,
-      stDev};
+      stDev,
+      ""};
 }
 
 Value GetSimulationStatus(const CallbackInfo &info)
@@ -684,8 +769,8 @@ Value GetSimulationStatus(const CallbackInfo &info)
   Object obj = Object::New(env);
   // Use atomic counter for thread-safe access
   currentSimulationNumber = atomicCurrentSimulationNumber.load(std::memory_order_relaxed);
-  Value currSimNum = Number::New(info.Env(), currentSimulationNumber);
-  Value numOfSims = Number::New(info.Env(), numberOfSimulations);
+  Value currSimNum = Number::New(info.Env(), static_cast<double>(currentSimulationNumber));
+  Value numOfSims = Number::New(info.Env(), static_cast<double>(numberOfSimulations));
   obj.Set("currentSimulationNumber", currSimNum);
   obj.Set("numberOfSimulations", numOfSims);
   return obj;
@@ -694,9 +779,9 @@ Value GetSimulationStatus(const CallbackInfo &info)
 class SimulationWorker : public Napi::AsyncWorker
 {
 public:
-  SimulationWorker(Napi::Function &callback, vector<int> deck, int numberOfSimulations, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards)
+  SimulationWorker(Napi::Function &callback, vector<int> deck, int64_t numberOfSimulations, int handsPerSession, int knownDealerCards, int knownFlopCards, int knownTurnRiverCards, bool excludeFishyPlays)
       : Napi::AsyncWorker(callback), deck(deck), numberOfSimulations(numberOfSimulations), handsPerSession(handsPerSession), knownDealerCards(knownDealerCards),
-        knownFlopCards(knownFlopCards), knownTurnRiverCards(knownTurnRiverCards), profit(0), edge(0), stDev(0), error("") {}
+        knownFlopCards(knownFlopCards), knownTurnRiverCards(knownTurnRiverCards), excludeFishyPlays(excludeFishyPlays), profit(0), edge(0), stDev(0), error("") {}
   ~SimulationWorker() {}
 
   // Executed inside the worker-thread.
@@ -705,7 +790,7 @@ public:
   // should go on `this`.
   void Execute()
   {
-    result simResults = runUthSimulations(deck, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+    result simResults = runUthSimulations(deck, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays);
     profit = simResults.profit;
     edge = simResults.edge;
     playerCards = simResults.playerCards;
@@ -755,11 +840,12 @@ private:
   vector<int> playerCards;
   vector<int> dealerCards;
   vector<int> communityCards;
-  int numberOfSimulations;
+  int64_t numberOfSimulations;
   int handsPerSession;
   int knownDealerCards;
   int knownFlopCards;
   int knownTurnRiverCards;
+  bool excludeFishyPlays;
   double profit;
   double edge;
   double stDev;
@@ -770,13 +856,14 @@ private:
 Napi::Value RunUthSimulations(const Napi::CallbackInfo &info)
 {
   Array deckArray = info[0].As<Array>();
-  numberOfSimulations = info[1].ToNumber();
+  numberOfSimulations = info[1].ToNumber().Int64Value();
   int handsPerSession = info[2].ToNumber();
   int knownDealerCards = info[3].ToNumber();
   int knownFlopCards = info[4].ToNumber();
   int knownTurnRiverCards = info[5].ToNumber();
+  bool excludeFishyPlays = info[6].ToBoolean();
   vector<int> deck;
-  Napi::Function callback = info[6].As<Napi::Function>();
+  Napi::Function callback = info[7].As<Napi::Function>();
   if (deckArray.Length() > 0)
   {
     for (size_t i = 0; i < deckArray.Length(); i++)
@@ -785,7 +872,7 @@ Napi::Value RunUthSimulations(const Napi::CallbackInfo &info)
       deck.push_back(value);
     }
   }
-  SimulationWorker *piWorker = new SimulationWorker(callback, deck, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards);
+  SimulationWorker *piWorker = new SimulationWorker(callback, deck, numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays);
   piWorker->Queue();
   return info.Env().Undefined();
 }

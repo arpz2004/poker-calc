@@ -37,7 +37,8 @@ export class AppComponent implements OnInit, OnDestroy {
       handsPerSession: [100, [Validators.min(1)]],
       knownDealerCards: [0, [Validators.min(0), Validators.max(2)]],
       knownFlopCards: [0, [Validators.min(0), Validators.max(3)]],
-      knownTurnRiverCards: [0, [Validators.min(0), Validators.max(2)]]
+      knownTurnRiverCards: [0, [Validators.min(0), Validators.max(2)]],
+      excludeFishyPlays: [false]
     });
   }
 
@@ -53,6 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
       const knownDealerCards = +this.simulationForm.get('knownDealerCards')?.value;
       const knownFlopCards = +this.simulationForm.get('knownFlopCards')?.value;
       const knownTurnRiverCards = +this.simulationForm.get('knownTurnRiverCards')?.value;
+      const excludeFishyPlays = this.simulationForm.get('excludeFishyPlays')?.value || false;
       this.simulationStatus = {
         currentSimulationNumber: 0,
         numberOfSimulations: numberOfSimulations
@@ -103,7 +105,7 @@ export class AppComponent implements OnInit, OnDestroy {
       });
       
       const start = window.performance.now();
-      this.pokerEvalService.runUthSimulations(numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards).subscribe((simulationResults) => {
+      this.pokerEvalService.runUthSimulations(numberOfSimulations, handsPerSession, knownDealerCards, knownFlopCards, knownTurnRiverCards, excludeFishyPlays).subscribe((simulationResults) => {
         this.profitPerSession = simulationResults.edge * handsPerSession;
         this.stDevPct = simulationResults.stDev / handsPerSession;
         this.simulation = simulationResults;
@@ -161,6 +163,7 @@ export class AppComponent implements OnInit, OnDestroy {
   onFormControlChange(controlName: string, value: string) {
     const ctrl = this.simulationForm.get(controlName) as FormControl;
     let removedNonNumbers = value.replace(/\D/g, '');
+    // Limit to 100 billion maximum for stability
     if (+removedNonNumbers > Math.pow(10, 11)) {
       removedNonNumbers = '' + Math.pow(10, 11);
     }
